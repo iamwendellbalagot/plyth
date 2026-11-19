@@ -6,7 +6,7 @@
 - OpenCode 1.19.4 demonstrated structured prediction carriage and model-visible miss feedback in a real model-issued call to a temporary synthetic plugin tool. The probe executed no shell command, preserved the original result, and triggered no additional turn from the plugin.
 - Phase 1 TypeScript core is implemented in `src/index.ts`; deterministic fixtures and focused tests are under `tests/`. No persistent ledger is included.
 - Phase 2 core support adds package exports, eligible/predicted/invalid/specific coverage counters, aggregate observed duration, and an `evidenceUnavailable` distinction for truncation.
-- Rook observe-only integration is implemented on branch `improve-permission-preferences` in the separate Rook repository. It adds bounded command classification, structured-event correlation/judging, output-label evidence, truncation handling, coverage/invalid-prediction/verdict/duration counters, and `/plyth`. It remains a local sibling `file:../plyth` dependency; standalone Rook checkout requires cloning Plyth next to it.
+- Rook observe-only integration is implemented on branch `improve-permission-preferences` in the separate Rook repository. It adds bounded command classification, structured-event correlation/judging, output-label evidence, truncation handling, coverage/invalid-prediction/verdict/duration counters, and `/plyth`. It remains a local sibling `file:../plyth` dependency; Rook CI checks out both sibling repos and builds Plyth before Rook.
 - **Phase 2 implementation is complete; evaluation remains open.** No model-issued Rook pilot was run, so real prediction coverage/specificity and host costs are not known. No feedback or persistent event ledger is enabled.
 - `implementation.md` records Phase 0/1 completion and Phase 2 implementation/evaluation status.
 
@@ -20,6 +20,7 @@
 - Phase 2 core tests include truncated-output behavior and coverage/duration counter assertions.
 - Rook: lint, typecheck, 60 focused tests, build, mock smoke, package dry-run, and formatting pass.
 - Plyth: six tests, build, package dry-run, Prettier, and diff check pass.
+- Local commits: Plyth `a482366` (`feat(core): add observe-only pilot metrics`); Rook `17ebe17` (`feat(plyth): add observe-only Rook pilot`).
 
 ## Pending
 

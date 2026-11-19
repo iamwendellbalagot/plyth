@@ -369,6 +369,7 @@ If missed predictions do not predict a useful opportunity, or feedback does not 
 - Extended the in-memory counter with eligible/predicted/invalid/specific coverage, verdict counts, and aggregate host command durations. Added `evidenceUnavailable` so an observed outcome can still be scored while unavailable/truncated evidence is marked vague.
 - Rook's inline observe-only Pi extension classifies eligible Bash commands, carries structured predictions without modifying the command, correlates bounded lifecycle events, normalizes completed exit codes, extracts at most 16 bounded output labels, treats missing results as unscorable, and reports counters through `/plyth`. No result feedback or persistent event ledger is enabled.
 - Rook verification: `npm run lint`, `npm run typecheck`, 60 focused Pi/Bash/gateway/PTY tests, `npm run build`, mock smoke, and `npm pack --dry-run` pass. Plyth's six tests, build, package dry-run, Prettier check, and `git diff --check` pass.
+- Local commits: Plyth `a482366`; Rook `17ebe17`.
 - No model-issued Rook pilot was run in this phase. Fixture expectations are not a substitute for agent predictions; prediction coverage, specificity, token/cache overhead, and latency require controlled live trials.
 
 **Phase 2 status:** observe-only implementation complete; evaluation gate remains open pending live Rook pilot measurements. Do not enable advisory feedback based on synthetic fixture results alone.
