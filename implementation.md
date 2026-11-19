@@ -233,13 +233,13 @@ PLYTH is advisory and fail-open: malformed prediction, missing event, storage fa
 
 There is no single integration mechanism common to all coding agents. The portable part is the event contract and judge; prediction transport and feedback delivery are per-host adapters. Ship adapters incrementally and label capabilities instead of claiming universal compatibility.
 
-| Host | Prediction transport | Result/feedback path | Initial status |
-|---|---|---|---|
-| Rook / Pi | Add optional `expect` metadata to Rook's custom bash tool; do not alter the command string. | Pi `tool_execution_end`; attach feedback to the tool result or next request using a supported extension path. | Best pilot: Rook owns its tool and Pi exposes lifecycle events. Verify tool output behavior in a small spike. |
-| Claude Code | Built-in Bash has no separate metadata field; shell-comment carriage remains experimental. A plugin/custom tool may provide structured metadata. | `PostToolUse` and `PostToolUseFailure` support short `additionalContext`; `PostToolUse` can also replace tool output. | Official hook contract documents both success and failure feedback. Prediction carriage, approval effects, and live delivery remain untested. |
-| Codex | Built-in Bash has no separate metadata field; shell-comment carriage remains experimental. A plugin/custom tool may provide structured metadata. | `PostToolUse` accepts `additionalContext` and can replace the result before continuing. | Official hook contract documents result and command input. Prediction carriage, hook trust setup, and live delivery remain untested. |
-| OpenCode | Plugin tools can define structured input; shell-command annotation for the built-in tool remains experimental. | Plugin `tool.execute.after` hook can inspect completed/error results and mutate the result. | Official plugin contract documents input/output hooks. Prediction carriage and live delivery remain untested. |
-| Other agents | Implement the shared API directly, wrap the command tool, or provide lifecycle hooks. | Host-specific feedback adapter. | Supported only where both prediction and actual result are observable. |
+| Host         | Prediction transport                                                                                                                             | Result/feedback path                                                                                                  | Initial status                                                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rook / Pi    | Add optional `expect` metadata to Rook's custom bash tool; do not alter the command string.                                                      | Pi `tool_execution_end`; attach feedback to the tool result or next request using a supported extension path.         | Best pilot: Rook owns its tool and Pi exposes lifecycle events. Verify tool output behavior in a small spike.                                 |
+| Claude Code  | Built-in Bash has no separate metadata field; shell-comment carriage remains experimental. A plugin/custom tool may provide structured metadata. | `PostToolUse` and `PostToolUseFailure` support short `additionalContext`; `PostToolUse` can also replace tool output. | Official hook contract documents both success and failure feedback. Prediction carriage, approval effects, and live delivery remain untested. |
+| Codex        | Built-in Bash has no separate metadata field; shell-comment carriage remains experimental. A plugin/custom tool may provide structured metadata. | `PostToolUse` accepts `additionalContext` and can replace the result before continuing.                               | Official hook contract documents result and command input. Prediction carriage, hook trust setup, and live delivery remain untested.          |
+| OpenCode     | Plugin tools can define structured input; shell-command annotation for the built-in tool remains experimental.                                   | Plugin `tool.execute.after` hook can inspect completed/error results and mutate the result.                           | Official plugin contract documents input/output hooks. Prediction carriage and live delivery remain untested.                                 |
+| Other agents | Implement the shared API directly, wrap the command tool, or provide lifecycle hooks.                                                            | Host-specific feedback adapter.                                                                                       | Supported only where both prediction and actual result are observable.                                                                        |
 
 #### Generic shell annotation
 
@@ -265,14 +265,14 @@ Beta-binomial rates may be added for descriptive dashboards when useful, but v0.
 
 ### Deferred models and entry conditions
 
-| Candidate | Add only if... |
-|---|---|
-| Surprise threshold / Beta-binomial intervention score | Specific misses produce noisy feedback and enough outcome data exists to tune a threshold on held-out tasks. |
-| CUSUM or changepoint detector | Trace evidence shows clusters of misses precede a distinct recoverable failure mode, and a simple consecutive-miss rule is inadequate. |
-| Hierarchical pooling | Multiple agents/models/repositories have sufficient data and cold-start estimates are a demonstrated issue. |
-| Per-memory trust score | A memory-citation protocol exists and repeated, validated evidence links misses to stale memories. |
-| Bayesian EVSI / budget allocation | A domain provides explicit action outcomes, likelihoods or empirical estimates, utilities, and controlled evidence that a more complex policy beats simple rules after overhead. |
-| Learned model or contextual bandit | There are enough controlled, representative trials, safe exploration constraints, and a demonstrated advantage over deterministic baselines. |
+| Candidate                                             | Add only if...                                                                                                                                                                   |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Surprise threshold / Beta-binomial intervention score | Specific misses produce noisy feedback and enough outcome data exists to tune a threshold on held-out tasks.                                                                     |
+| CUSUM or changepoint detector                         | Trace evidence shows clusters of misses precede a distinct recoverable failure mode, and a simple consecutive-miss rule is inadequate.                                           |
+| Hierarchical pooling                                  | Multiple agents/models/repositories have sufficient data and cold-start estimates are a demonstrated issue.                                                                      |
+| Per-memory trust score                                | A memory-citation protocol exists and repeated, validated evidence links misses to stale memories.                                                                               |
+| Bayesian EVSI / budget allocation                     | A domain provides explicit action outcomes, likelihoods or empirical estimates, utilities, and controlled evidence that a more complex policy beats simple rules after overhead. |
+| Learned model or contextual bandit                    | There are enough controlled, representative trials, safe exploration constraints, and a demonstrated advantage over deterministic baselines.                                     |
 
 No statistical model can recover the outcome of an unchosen command. Do not treat replay or observed success after the agent ignored advice as counterfactual evidence.
 
@@ -363,6 +363,16 @@ If missed predictions do not predict a useful opportunity, or feedback does not 
 
 **Phase 1 status:** complete for the stated protocol/judge exit criteria. The warm microbenchmark is below 1 ms for bounded events; repeat under the target adapter/runtime during integration. Session event-order integration remains future adapter work; no persistence or raw event logging is included.
 
+#### Phase 2 implementation (2026-11-19)
+
+- Added package exports/build metadata so the TypeScript core can be consumed by Rook; its development dependency is a sibling checkout (`file:../plyth`), and Rook CI checks out both repositories side-by-side and builds Plyth before Rook.
+- Extended the in-memory counter with eligible/predicted/invalid/specific coverage, verdict counts, and aggregate host command durations. Added `evidenceUnavailable` so an observed outcome can still be scored while unavailable/truncated evidence is marked vague.
+- Rook's inline observe-only Pi extension classifies eligible Bash commands, carries structured predictions without modifying the command, correlates bounded lifecycle events, normalizes completed exit codes, extracts at most 16 bounded output labels, treats missing results as unscorable, and reports counters through `/plyth`. No result feedback or persistent event ledger is enabled.
+- Rook verification: `npm run lint`, `npm run typecheck`, 60 focused Pi/Bash/gateway/PTY tests, `npm run build`, mock smoke, and `npm pack --dry-run` pass. Plyth's six tests, build, package dry-run, Prettier check, and `git diff --check` pass.
+- No model-issued Rook pilot was run in this phase. Fixture expectations are not a substitute for agent predictions; prediction coverage, specificity, token/cache overhead, and latency require controlled live trials.
+
+**Phase 2 status:** observe-only implementation complete; evaluation gate remains open pending live Rook pilot measurements. Do not enable advisory feedback based on synthetic fixture results alone.
+
 ### Phase 2 — Rook observe-only pilot
 
 - Add an optional `expect` field to Rook's custom bash tool schema and a stable, concise instruction at session start.
@@ -409,34 +419,34 @@ Do not start this phase just to add sophistication.
 
 ## 12. Risks and mitigations
 
-| Risk | Mitigation |
-|---|---|
-| Agent emits no prediction or vague predictions | Keep prediction optional; measure coverage and specificity before enabling feedback. |
-| Agent makes trivial predictions to appear accurate | Compare with a history baseline; report specificity and outcome distributions, not raw accuracy alone. |
-| Misses are not actionable | Test miss-to-recovery relationship; disable feedback if it does not beat logging-only. |
-| Feedback distracts or causes overthinking | Keep messages short, neutral, capped and only for specific scorable misses. |
-| Extra output tokens exceed savings | Include prediction and feedback tokens in paired end-to-end metrics. |
-| Hook subprocess adds latency | Prefer in-process plugins or persistent adapters; measure startup, do not assume it is negligible. |
-| Shell annotation alters permissions or command behavior | Prefer structured tool metadata; treat comment syntax as experimental and host-specific. |
-| Different hosts expose different result semantics | Capability declarations and adapter-specific normalizers; use `unscorable` rather than guessing. |
-| Prompt caching is disrupted | Keep adapter instructions and tool schema stable; no per-turn system prompt rewrite; verify behavior per provider. |
-| Outcome hit is mistaken for correct reasoning | State explicitly that it is one prediction outcome, not proof of the agent's mental model or task correctness. |
-| Novelty is overstated | Complete prior-art search; describe the contribution as a practical integration unless evidence supports more. |
-| Duplicate/stale project knowledge | Rook owns factual memory; do not write a separate procedure/memory system in v0.1. |
+| Risk                                                    | Mitigation                                                                                                         |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Agent emits no prediction or vague predictions          | Keep prediction optional; measure coverage and specificity before enabling feedback.                               |
+| Agent makes trivial predictions to appear accurate      | Compare with a history baseline; report specificity and outcome distributions, not raw accuracy alone.             |
+| Misses are not actionable                               | Test miss-to-recovery relationship; disable feedback if it does not beat logging-only.                             |
+| Feedback distracts or causes overthinking               | Keep messages short, neutral, capped and only for specific scorable misses.                                        |
+| Extra output tokens exceed savings                      | Include prediction and feedback tokens in paired end-to-end metrics.                                               |
+| Hook subprocess adds latency                            | Prefer in-process plugins or persistent adapters; measure startup, do not assume it is negligible.                 |
+| Shell annotation alters permissions or command behavior | Prefer structured tool metadata; treat comment syntax as experimental and host-specific.                           |
+| Different hosts expose different result semantics       | Capability declarations and adapter-specific normalizers; use `unscorable` rather than guessing.                   |
+| Prompt caching is disrupted                             | Keep adapter instructions and tool schema stable; no per-turn system prompt rewrite; verify behavior per provider. |
+| Outcome hit is mistaken for correct reasoning           | State explicitly that it is one prediction outcome, not proof of the agent's mental model or task correctness.     |
+| Novelty is overstated                                   | Complete prior-art search; describe the contribution as a practical integration unless evidence supports more.     |
+| Duplicate/stale project knowledge                       | Rook owns factual memory; do not write a separate procedure/memory system in v0.1.                                 |
 
 ## 13. Research basis
 
 These sources motivate hypotheses and design constraints. Their reported results are benchmark-specific and do not establish that PLYTH will help Rook.
 
-- Huang et al., *Large Language Models Cannot Self-Correct Reasoning Yet*, ICLR 2024: intrinsic self-correction without external feedback is unreliable. https://arxiv.org/abs/2310.01798
-- Kamoi et al., *When Can LLMs Actually Correct Their Own Mistakes?*, TACL 2024: external, reliable feedback is an important condition for correction. https://arxiv.org/abs/2406.01297
-- Cuadron et al., *The Danger of Overthinking: Examining the Reasoning-Action Dilemma in Agentic Tasks*, 2025: analyzes overthinking patterns in software-agent trajectories; results motivate measuring action/analysis balance. https://arxiv.org/abs/2502.08235
-- Chen et al., *Do NOT Think That Much for 2+3?*, 2025: studies overthinking and adaptive inference effort. https://arxiv.org/abs/2412.21187
-- Snell et al., *Scaling LLM Test-Time Compute Optimally*, 2024: compute allocation effectiveness varies with prompt difficulty. https://arxiv.org/abs/2408.03314
-- Xia et al., *Agentless: Demystifying LLM-based Software Engineering Agents*, 2024: a simple localization/repair/validation workflow is a useful baseline against complex agent loops. https://arxiv.org/abs/2407.01489
-- Yang et al., *SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering*, 2024: tool-interface design affects coding-agent performance. https://arxiv.org/abs/2405.15793
-- Anthropic, *The “think” tool*, 2025: reports benefits in particular sequential/tool-heavy settings and limits elsewhere. https://www.anthropic.com/engineering/claude-think-tool
-- Manus, *Context Engineering for AI Agents*, 2025: practitioner guidance on stable prefixes, tool interfaces, persistent state, and preserving error feedback. https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus
+- Huang et al., _Large Language Models Cannot Self-Correct Reasoning Yet_, ICLR 2024: intrinsic self-correction without external feedback is unreliable. https://arxiv.org/abs/2310.01798
+- Kamoi et al., _When Can LLMs Actually Correct Their Own Mistakes?_, TACL 2024: external, reliable feedback is an important condition for correction. https://arxiv.org/abs/2406.01297
+- Cuadron et al., _The Danger of Overthinking: Examining the Reasoning-Action Dilemma in Agentic Tasks_, 2025: analyzes overthinking patterns in software-agent trajectories; results motivate measuring action/analysis balance. https://arxiv.org/abs/2502.08235
+- Chen et al., _Do NOT Think That Much for 2+3?_, 2025: studies overthinking and adaptive inference effort. https://arxiv.org/abs/2412.21187
+- Snell et al., _Scaling LLM Test-Time Compute Optimally_, 2024: compute allocation effectiveness varies with prompt difficulty. https://arxiv.org/abs/2408.03314
+- Xia et al., _Agentless: Demystifying LLM-based Software Engineering Agents_, 2024: a simple localization/repair/validation workflow is a useful baseline against complex agent loops. https://arxiv.org/abs/2407.01489
+- Yang et al., _SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering_, 2024: tool-interface design affects coding-agent performance. https://arxiv.org/abs/2405.15793
+- Anthropic, _The “think” tool_, 2025: reports benefits in particular sequential/tool-heavy settings and limits elsewhere. https://www.anthropic.com/engineering/claude-think-tool
+- Manus, _Context Engineering for AI Agents_, 2025: practitioner guidance on stable prefixes, tool interfaces, persistent state, and preserving error feedback. https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus
 
 ### Prior art status
 
@@ -463,15 +473,15 @@ Use a small fixed set of trap fixtures plus the current Rook coding evaluation. 
 
 ## 16. Decisions and defaults
 
-| Decision | Initial default | Revisit when |
-|---|---|---|
-| Core language | TypeScript | Measured startup/distribution cost requires a different runtime. |
-| First host | Rook | The vertical slice is validated. |
-| Second host | Choose by feasibility spike; Claude Code is a candidate | Actual prediction carrier and feedback semantics are tested. |
-| Rook adapter ownership | Adapter code in the Rook repo; shared contract/core in Plyth | Packaging and release experience show a better boundary. |
-| Feedback mode | Observe-only first, then opt-in advisory | Paired evaluation passes. |
-| Statistics | Counts and offline uncertainty; no runtime statistical policy | Data identifies a failure simple rules cannot address. |
-| Cross-agent prediction transport | Structured metadata preferred; shell comments experimental | Host adapters prove semantics and permissions are preserved. |
+| Decision                         | Initial default                                               | Revisit when                                                     |
+| -------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Core language                    | TypeScript                                                    | Measured startup/distribution cost requires a different runtime. |
+| First host                       | Rook                                                          | The vertical slice is validated.                                 |
+| Second host                      | Choose by feasibility spike; Claude Code is a candidate       | Actual prediction carrier and feedback semantics are tested.     |
+| Rook adapter ownership           | Adapter code in the Rook repo; shared contract/core in Plyth  | Packaging and release experience show a better boundary.         |
+| Feedback mode                    | Observe-only first, then opt-in advisory                      | Paired evaluation passes.                                        |
+| Statistics                       | Counts and offline uncertainty; no runtime statistical policy | Data identifies a failure simple rules cannot address.           |
+| Cross-agent prediction transport | Structured metadata preferred; shell comments experimental    | Host adapters prove semantics and permissions are preserved.     |
 
 ## References for host integration (verify pinned versions)
 

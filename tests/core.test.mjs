@@ -143,12 +143,28 @@ test("session feedback is miss-only, deduplicated, and capped at five", () => {
 
 test("session counters retain verdict denominators without storing events", () => {
   const counter = new SessionCounter();
+  counter.recordEligible({ outcome: "pass", evidence: "suite passes" });
+  counter.recordEligible({ outcome: "fail" });
+  counter.recordEligible();
+  counter.recordEligible(undefined, true);
+  counter.recordDuration(250);
+  counter.recordDuration(-1);
+  counter.recordDuration(86_400_001);
   for (const fixture of fixtures)
     counter.record(judgeEvents(fixture.start, fixture.finish));
+  assert.deepEqual(counter.predictionStats(), {
+    eligibleCommands: 4,
+    predictedCommands: 3,
+    invalidPredictions: 1,
+    specificPredictions: 1,
+    durationMs: 250,
+    durationSamples: 1,
+    verdicts: { hit: 1, miss: 2, vague: 3, none: 1, unscorable: 3 },
+  });
   assert.deepEqual(counter.snapshot(), {
     hit: 1,
     miss: 2,
-    vague: 2,
+    vague: 3,
     none: 1,
     unscorable: 3,
   });

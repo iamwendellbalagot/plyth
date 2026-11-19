@@ -1,13 +1,25 @@
 {
   "name": "plyth",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "engines": {
     "node": ">=22.6.0"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build",
     "test": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2"
   }
 }

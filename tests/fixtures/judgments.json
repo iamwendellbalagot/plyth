@@ -78,6 +78,26 @@
     "reasonCode": "evidence_unavailable"
   },
   {
+    "name": "truncated output keeps outcome but makes evidence unscorable",
+    "start": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "c10",
+      "adapter": "fixture",
+      "commandClass": "test",
+      "prediction": { "outcome": "pass", "evidence": "retry succeeds" }
+    },
+    "finish": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "c10",
+      "outcome": "pass",
+      "evidenceUnavailable": true
+    },
+    "verdict": "vague",
+    "reasonCode": "evidence_unavailable"
+  },
+  {
     "name": "miss when evidence differs",
     "start": {
       "protocol": "plyth/event/1",

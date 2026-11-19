@@ -24,6 +24,7 @@ export interface CommandFinished {
   outcome?: PredictionOutcome;
   durationMs?: number;
   evidenceLabels?: string[];
+  evidenceUnavailable?: boolean;
   resultDigest?: string;
   unscorableReason?: string;
 }
@@ -36,6 +37,16 @@ export interface Judgment {
 }
 
 export type SessionCounts = Record<Verdict, number>;
+
+export interface SessionPredictionStats {
+  eligibleCommands: number;
+  predictedCommands: number;
+  invalidPredictions: number;
+  specificPredictions: number;
+  durationMs: number;
+  durationSamples: number;
+  verdicts: SessionCounts;
+}
 
 export interface HostCommandResult {
   exitCode?: number;
@@ -126,6 +137,7 @@ export function parseCommandFinished(
       "outcome",
       "durationMs",
       "evidenceLabels",
+      "evidenceUnavailable",
       "resultDigest",
       "unscorableReason",
     ])
@@ -155,6 +167,11 @@ export function parseCommandFinished(
   )
     return invalid("invalid_event");
   if (
+    input.evidenceUnavailable !== undefined &&
+    typeof input.evidenceUnavailable !== "boolean"
+  )
+    return invalid("invalid_event");
+  if (
     input.resultDigest !== undefined &&
     !isBoundedString(input.resultDigest, 128)
   )
@@ -173,6 +190,9 @@ export function parseCommandFinished(
     ...(input.evidenceLabels === undefined
       ? {}
       : { evidenceLabels: [...input.evidenceLabels] }),
+    ...(input.evidenceUnavailable === undefined
+      ? {}
+      : { evidenceUnavailable: input.evidenceUnavailable }),
     ...(input.resultDigest === undefined
       ? {}
       : { resultDigest: input.resultDigest }),
@@ -240,6 +260,12 @@ export function judgeEvents(
       verdict: "vague",
       reasonCode: "no_evidence",
     };
+  if (finish.value.evidenceUnavailable)
+    return {
+      callId: start.value.callId,
+      verdict: "vague",
+      reasonCode: "evidence_unavailable",
+    };
   if (!finish.value.evidenceLabels)
     return {
       callId: start.value.callId,
@@ -289,6 +315,12 @@ export function formatFeedback(
 }
 
 export class SessionCounter {
+  private eligibleCommands = 0;
+  private predictedCommands = 0;
+  private invalidPredictions = 0;
+  private specificPredictions = 0;
+  private durationMs = 0;
+  private durationSamples = 0;
   private readonly counts: SessionCounts = {
     hit: 0,
     miss: 0,
@@ -301,8 +333,52 @@ export class SessionCounter {
     this.counts[judgment.verdict]++;
   }
 
+  recordEligible(
+    prediction?: Prediction,
+    supplied = prediction !== undefined,
+  ): void {
+    this.eligibleCommands++;
+    if (supplied) this.predictedCommands++;
+    if (supplied && !prediction) this.invalidPredictions++;
+    if (prediction?.evidence?.trim()) this.specificPredictions++;
+  }
+
+  reset(): void {
+    this.eligibleCommands = 0;
+    this.predictedCommands = 0;
+    this.invalidPredictions = 0;
+    this.specificPredictions = 0;
+    this.durationMs = 0;
+    this.durationSamples = 0;
+    for (const verdict of Object.keys(this.counts) as Verdict[])
+      this.counts[verdict] = 0;
+  }
+
+  recordDuration(durationMs: number): void {
+    if (
+      !Number.isFinite(durationMs) ||
+      durationMs < 0 ||
+      durationMs > 86_400_000
+    )
+      return;
+    this.durationMs += durationMs;
+    this.durationSamples++;
+  }
+
   snapshot(): SessionCounts {
     return { ...this.counts };
+  }
+
+  predictionStats(): SessionPredictionStats {
+    return {
+      eligibleCommands: this.eligibleCommands,
+      predictedCommands: this.predictedCommands,
+      invalidPredictions: this.invalidPredictions,
+      specificPredictions: this.specificPredictions,
+      durationMs: this.durationMs,
+      durationSamples: this.durationSamples,
+      verdicts: this.snapshot(),
+    };
   }
 }
 
