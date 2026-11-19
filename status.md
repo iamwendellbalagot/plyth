@@ -2,6 +2,8 @@
 
 ## Current state
 
+- 2026-11-20 pilot-environment follow-up: started the local Colima Ubuntu 24.04 ARM64 VM and installed Bubblewrap 0.8.0 there. The exact Rook sandbox probe succeeds as VM root, but fails as the normal VM user with `bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`; ordinary unprivileged `unshare --user --pid --net` succeeds. Do not run the Rook pilot as root or in a privileged Docker container as a substitute—the sandbox boundary would be materially different. No repository files were changed for this probe.
+- The configured default remains `RONE_Models/gpt-6-luna`, but its workspace `models.json` and `RDSEC_API_KEY` are absent in this environment. The only Pi auth provider present is `openai`; do not silently switch providers/models for the pilot. The requested model-issued run therefore remains blocked on both an unprivileged Bubblewrap network-namespace probe and restoration of the intended RONE provider configuration.
 - Local Git release prepared on 2026-11-19: tag `v0.1.0`, ZIP `/tmp/opencode/releases/plyth-v0.1.0.zip`. The ZIP contains the committed source snapshot and `.git` directory. Local-only; not pushed or published.
 - Phase 0 feasibility gate is complete. Rook/Pi has structured `expect` metadata and opt-in result feedback; its focused spike and Bash-tool tests pass (12 tests). A Rook model-issued command was attempted but the non-interactive CLI remained in plan mode, so prediction coverage and feedback delivery in a live Rook turn remain unmeasured.
 - OpenCode 1.19.4 demonstrated structured prediction carriage and model-visible miss feedback in a real model-issued call to a temporary synthetic plugin tool. The probe executed no shell command, preserved the original result, and triggered no additional turn from the plugin.
@@ -25,7 +27,7 @@
 
 ## Pending
 
-- Repeat the model-issued Rook pilot in an environment where Rook's Bubblewrap namespace probe succeeds; capture `/plyth` coverage, specificity, verdicts, and command duration with task outcomes.
+- Repeat the model-issued Rook pilot only after an unprivileged host passes Rook's exact Bubblewrap probe and the `RONE_Models/gpt-6-luna` provider configuration/credential is available; capture `/plyth` coverage, specificity, verdicts, command duration, task outcome, and provider usage. Current Colima VM does not meet the sandbox requirement for the normal user.
 - Record provider/token/cache usage before considering Phase 3 feedback. The completed test-only run is not comparative evidence; feedback remains disabled.
 - Repeat core timing under the target adapter/runtime and confirm event ordering/session behavior at adapter integration.
 - Preserve OpenCode results as a feasibility probe only; a product adapter and cross-host shared-fixture behavior remain Phase 4 work.
