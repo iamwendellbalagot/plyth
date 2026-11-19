@@ -236,9 +236,9 @@ There is no single integration mechanism common to all coding agents. The portab
 | Host | Prediction transport | Result/feedback path | Initial status |
 |---|---|---|---|
 | Rook / Pi | Add optional `expect` metadata to Rook's custom bash tool; do not alter the command string. | Pi `tool_execution_end`; attach feedback to the tool result or next request using a supported extension path. | Best pilot: Rook owns its tool and Pi exposes lifecycle events. Verify tool output behavior in a small spike. |
-| Claude Code | Start with the shell-comment convention only if tests prove the model emits it and command parsing/permissions are unaffected. A custom tool/plugin may be needed for robust structured metadata. | `PostToolUse` and `PostToolUseFailure` hooks can observe outcomes; hook `additionalContext` can provide feedback. | Hook APIs exist; reliable prediction carriage through built-in Bash is unresolved. Do not call this fully supported until proven. |
-| Codex | Same shell-comment convention or a host/plugin-defined command tool; preserve normal command and approval semantics. | `PostToolUse` hook can inspect results and return additional context. | Lifecycle hooks exist; prediction carriage and trusted installation need a feasibility spike. |
-| OpenCode | Plugin can wrap or register a custom command tool; generic built-in shell metadata needs verification. | Plugin tool execute hooks can observe/modify results; confirm delivery to the next model context. | Plugin APIs exist; validate exact hook contract and tool behavior before committing an adapter. |
+| Claude Code | Built-in Bash has no separate metadata field; shell-comment carriage remains experimental. A plugin/custom tool may provide structured metadata. | `PostToolUse` and `PostToolUseFailure` support short `additionalContext`; `PostToolUse` can also replace tool output. | Official hook contract documents both success and failure feedback. Prediction carriage, approval effects, and live delivery remain untested. |
+| Codex | Built-in Bash has no separate metadata field; shell-comment carriage remains experimental. A plugin/custom tool may provide structured metadata. | `PostToolUse` accepts `additionalContext` and can replace the result before continuing. | Official hook contract documents result and command input. Prediction carriage, hook trust setup, and live delivery remain untested. |
+| OpenCode | Plugin tools can define structured input; shell-command annotation for the built-in tool remains experimental. | Plugin `tool.execute.after` hook can inspect completed/error results and mutate the result. | Official plugin contract documents input/output hooks. Prediction carriage and live delivery remain untested. |
 | Other agents | Implement the shared API directly, wrap the command tool, or provide lifecycle hooks. | Host-specific feedback adapter. | Supported only where both prediction and actual result are observable. |
 
 #### Generic shell annotation
@@ -334,6 +334,18 @@ If missed predictions do not predict a useful opportunity, or feedback does not 
 
 **Exit:** Rook has a working end-to-end spike and at least one other host has a demonstrated, safe prediction and feedback path. Otherwise, narrow the interoperability claim and continue Rook-only.
 
+#### Feasibility spike results (2026-11-19)
+
+- **Rook/Pi structured field:** implemented locally as optional `expect: { outcome, evidence? }` metadata on Rook's Bash tool. The shell receives the original `command`; the Rook policy test verifies a command with the extra field still follows the same routine-command approval path.
+- **Pi result feedback:** implemented as an opt-in (`PLYTH_SPIKE_FEEDBACK=1`) `tool_result` extension. Pi's pinned `@earendil-works/pi-coding-agent` 1.5.2 contract allows this hook to patch content before the tool result is delivered. The spike compares exit-code-derived `pass`/`fail` to the expectation and appends one short observation only on an outcome miss. It preserves structured output, makes no model call, and does not start another turn.
+- **Result limitations:** Pi's Bash structured output exposes `exit_code`, bounded output, truncation, and wall time for completed shell processes. Thrown/cancelled/timed-out calls arrive without that structured exit code; `isError` alone does not distinguish those cases from other errors, so this spike leaves them unscored rather than guessing `error`, `pass`, or `fail`. Blocked/pre-validation calls do not reach `tool_result` and are outside this spike.
+- **OpenCode model-issued probe:** OpenCode 1.19.4 loaded a temporary local plugin in an isolated directory. The model called a structured `plyth_probe` tool with `expect.outcome: "fail"`; the synthetic tool made no command call and returned `pass`. `tool.execute.after` appended the miss observation to the existing result, preserved the original output and metadata, and the model acknowledged the feedback in the next step. No extra continuation or shell execution was triggered by the plugin.
+- **Rook live CLI attempt:** the existing focused Rook/Pi integration tests pass (12 tests across the spike and Bash tool), but a one-shot CLI probe remained in plan mode and exposed no Bash tool. Therefore actual model-issued Rook prediction/feedback remains unverified; the tested Rook hook/tool path and the live OpenCode probe meet the feasibility-spike exit gate, while Rook pilot measurements remain Phase 2 work.
+- **Second-host contracts:** current official Claude Code and Codex hook references document command input/result visibility and model-visible post-tool context. This verifies documented feedback mechanisms, not end-to-end prediction transport. No Claude Code or Codex executable is installed in the development container.
+- **Not yet verified:** shell-comment prediction parsing/permission behavior in any host, whether models reliably emit a prediction, delivered feedback in a live model turn, prompt-cache behavior, provider/token overhead, and cross-platform behavior.
+
+**Phase 0 status:** complete. Rook/Pi has structured prediction transport and tested in-result feedback; OpenCode has demonstrated structured prediction carriage and model-visible feedback in an executable model-issued tool call. Keep the Rook live model trial, prediction coverage, latency, prompt-cache behavior, token overhead and cross-platform checks as pilot measurements, not prerequisites for core protocol work.
+
 ### Phase 1 — Core protocol and judge
 
 - Implement versioned types, schema validation, outcome normalization interface and pure judge functions.
@@ -342,6 +354,14 @@ If missed predictions do not predict a useful opportunity, or feedback does not 
 - Keep all errors fail-open.
 
 **Exit:** deterministic fixture replay; no raw event logging; core evaluation under 1 ms for bounded events in the target runtime (adapter startup measured separately).
+
+#### Phase 1 implementation (2026-11-19)
+
+- Added a dependency-free TypeScript package with protocol types, strict bounded event parsers, host exit-result normalization, correlated deterministic judging, evidence-label matching, advisory feedback formatting, in-memory verdict counters, and a miss-only session gate capped at five with deduplication.
+- Added deterministic fixture replay for hit, miss, vague, none and unscorable outcomes, including malformed and mismatched events. Tests cover bounds, fail-open behavior, normalization, feedback deduplication/caps, and counter snapshots.
+- Validation: `npm test` (6 tests), `npm run build`, Prettier check, and `git diff --check` pass. A local 10,000-iteration warm microbenchmark measured judge latency at p50 1.17 μs, p95 6.01 μs, and p99 11.27 μs; this is an indicative container measurement, not a cross-runtime performance claim. The implementation is in-process and has no command execution or persistence path.
+
+**Phase 1 status:** complete for the stated protocol/judge exit criteria. The warm microbenchmark is below 1 ms for bounded events; repeat under the target adapter/runtime during integration. Session event-order integration remains future adapter work; no persistence or raw event logging is included.
 
 ### Phase 2 — Rook observe-only pilot
 

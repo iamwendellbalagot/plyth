@@ -1,0 +1,174 @@
+[
+  {
+    "name": "prediction hit",
+    "start": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "c1",
+      "adapter": "fixture",
+      "commandClass": "test",
+      "prediction": { "outcome": "pass", "evidence": "retry succeeds" }
+    },
+    "finish": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "c1",
+      "outcome": "pass",
+      "evidenceLabels": ["Retry succeeds after reconnect"]
+    },
+    "verdict": "hit",
+    "reasonCode": "outcome_and_evidence_match"
+  },
+  {
+    "name": "outcome miss",
+    "start": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "c2",
+      "adapter": "fixture",
+      "commandClass": "test",
+      "prediction": { "outcome": "fail", "evidence": "retry fails" }
+    },
+    "finish": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "c2",
+      "outcome": "pass",
+      "evidenceLabels": ["retry succeeds"]
+    },
+    "verdict": "miss",
+    "reasonCode": "outcome_mismatch"
+  },
+  {
+    "name": "vague prediction without evidence",
+    "start": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "c3",
+      "adapter": "fixture",
+      "commandClass": "build",
+      "prediction": { "outcome": "pass" }
+    },
+    "finish": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "c3",
+      "outcome": "pass"
+    },
+    "verdict": "vague",
+    "reasonCode": "no_evidence"
+  },
+  {
+    "name": "vague when evidence output unavailable",
+    "start": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "c4",
+      "adapter": "fixture",
+      "commandClass": "diagnostic",
+      "prediction": { "outcome": "pass", "evidence": "warning absent" }
+    },
+    "finish": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "c4",
+      "outcome": "pass"
+    },
+    "verdict": "vague",
+    "reasonCode": "evidence_unavailable"
+  },
+  {
+    "name": "miss when evidence differs",
+    "start": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "c5",
+      "adapter": "fixture",
+      "commandClass": "test",
+      "prediction": { "outcome": "pass", "evidence": "retry succeeds" }
+    },
+    "finish": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "c5",
+      "outcome": "pass",
+      "evidenceLabels": ["retry remains pending"]
+    },
+    "verdict": "miss",
+    "reasonCode": "evidence_mismatch"
+  },
+  {
+    "name": "no prediction",
+    "start": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "c6",
+      "adapter": "fixture",
+      "commandClass": "other"
+    },
+    "finish": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "c6",
+      "outcome": "fail"
+    },
+    "verdict": "none",
+    "reasonCode": "no_prediction"
+  },
+  {
+    "name": "missing result is unscorable",
+    "start": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "c7",
+      "adapter": "fixture",
+      "commandClass": "test",
+      "prediction": { "outcome": "error" }
+    },
+    "finish": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "c7"
+    },
+    "verdict": "unscorable",
+    "reasonCode": "outcome_unavailable"
+  },
+  {
+    "name": "malformed input is unscorable",
+    "start": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "c8",
+      "adapter": "fixture",
+      "commandClass": "test",
+      "prediction": { "outcome": "maybe" }
+    },
+    "finish": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "c8",
+      "outcome": "pass"
+    },
+    "verdict": "unscorable",
+    "reasonCode": "invalid_prediction"
+  },
+  {
+    "name": "correlation mismatch is unscorable",
+    "start": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "c9",
+      "adapter": "fixture",
+      "commandClass": "test",
+      "prediction": { "outcome": "fail" }
+    },
+    "finish": {
+      "protocol": "plyth/event/1",
+      "sessionId": "s1",
+      "callId": "other",
+      "outcome": "fail"
+    },
+    "verdict": "unscorable",
+    "reasonCode": "call_mismatch"
+  }
+]

@@ -1,0 +1,166 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import test from "node:test";
+import {
+  judgeEvents,
+  normalizeOutcome,
+  parseCommandFinished,
+  parseCommandStarted,
+  safeJudgeEvents,
+  SessionFeedbackGate,
+  SessionCounter,
+} from "../src/index.ts";
+
+const fixtures = JSON.parse(
+  await readFile(new URL("./fixtures/judgments.json", import.meta.url), "utf8"),
+);
+
+test("deterministic judgment fixtures cover all verdicts and malformed events", () => {
+  for (const fixture of fixtures) {
+    const judgment = judgeEvents(fixture.start, fixture.finish);
+    assert.equal(judgment.verdict, fixture.verdict, fixture.name);
+    assert.equal(judgment.reasonCode, fixture.reasonCode, fixture.name);
+  }
+  assert.deepEqual(
+    new Set(fixtures.map(({ verdict }) => verdict)),
+    new Set(["hit", "miss", "vague", "none", "unscorable"]),
+  );
+});
+
+test("host result normalization distinguishes completed failures and non-completion", () => {
+  assert.deepEqual(normalizeOutcome({ exitCode: 0 }), {
+    ok: true,
+    value: "pass",
+  });
+  assert.deepEqual(normalizeOutcome({ exitCode: 2 }), {
+    ok: true,
+    value: "fail",
+  });
+  assert.deepEqual(normalizeOutcome({ timedOut: true }), {
+    ok: true,
+    value: "error",
+  });
+  assert.deepEqual(normalizeOutcome({ cancelled: true }), {
+    ok: true,
+    value: "error",
+  });
+  assert.deepEqual(normalizeOutcome({ launchError: true }), {
+    ok: true,
+    value: "error",
+  });
+  assert.deepEqual(normalizeOutcome({}), {
+    ok: false,
+    reason: "outcome_unavailable",
+  });
+});
+
+test("event validators enforce field, enum, and payload bounds", () => {
+  const start = {
+    protocol: "plyth/event/1",
+    sessionId: "s",
+    callId: "c",
+    adapter: "test",
+    commandClass: "test",
+    prediction: { outcome: "pass", evidence: "x".repeat(201) },
+  };
+  assert.deepEqual(parseCommandStarted(start), {
+    ok: false,
+    reason: "invalid_prediction",
+  });
+  assert.deepEqual(
+    parseCommandFinished({
+      protocol: "plyth/event/1",
+      sessionId: "s",
+      callId: "c",
+      outcome: "pass",
+      durationMs: -1,
+    }),
+    { ok: false, reason: "invalid_event" },
+  );
+  assert.equal(
+    parseCommandFinished({
+      protocol: "plyth/event/1",
+      sessionId: "s",
+      callId: "c",
+      outcome: "pass",
+      unexpected: true,
+    }).ok,
+    false,
+  );
+  assert.equal(
+    parseCommandStarted({
+      protocol: "plyth/event/1",
+      sessionId: "s",
+      callId: "c",
+      adapter: "test",
+      commandClass: "test",
+      note: "x".repeat(17_000),
+    }).ok,
+    false,
+  );
+});
+
+test("session feedback is miss-only, deduplicated, and capped at five", () => {
+  const gate = new SessionFeedbackGate();
+  const fixture = fixtures.find(({ name }) => name === "outcome miss");
+  const feedback = gate.offer(fixture.start, fixture.finish);
+  assert.match(feedback, /Expected `fail` .*observed `pass`/);
+  assert.equal(gate.offer(fixture.start, fixture.finish), undefined);
+  assert.equal(gate.offer(fixtures[0].start, fixtures[0].finish), undefined);
+  assert.equal(
+    gate.offer(
+      { ...fixture.start, prediction: { outcome: "fail" } },
+      fixture.finish,
+    ),
+    undefined,
+  );
+  const evidenceMiss = fixtures.find(
+    ({ name }) => name === "miss when evidence differs",
+  );
+  assert.match(
+    gate.offer(evidenceMiss.start, evidenceMiss.finish),
+    /no matching evidence label/,
+  );
+  assert.equal(gate.offer(null, null), undefined);
+
+  for (let index = 0; index < 6; index++) {
+    const start = {
+      ...fixture.start,
+      callId: `cap-${index}`,
+      prediction: { outcome: "fail", evidence: `expected ${index}` },
+    };
+    const finish = {
+      ...fixture.finish,
+      callId: `cap-${index}`,
+      evidenceLabels: [`expected ${index}`],
+      resultDigest: `result-${index}`,
+    };
+    gate.offer(start, finish);
+  }
+  assert.equal(gate.count, 5);
+  assert.throws(() => new SessionFeedbackGate(6), RangeError);
+});
+
+test("session counters retain verdict denominators without storing events", () => {
+  const counter = new SessionCounter();
+  for (const fixture of fixtures)
+    counter.record(judgeEvents(fixture.start, fixture.finish));
+  assert.deepEqual(counter.snapshot(), {
+    hit: 1,
+    miss: 2,
+    vague: 2,
+    none: 1,
+    unscorable: 3,
+  });
+  const snapshot = counter.snapshot();
+  snapshot.hit = 99;
+  assert.equal(counter.snapshot().hit, 1);
+});
+
+test("safe judging fails open on unexpected data", () => {
+  assert.deepEqual(safeJudgeEvents(null, null), {
+    callId: "",
+    verdict: "unscorable",
+    reasonCode: "invalid_event",
+  });
+});
