@@ -372,7 +372,7 @@ If missed predictions do not predict a useful opportunity, or feedback does not 
 - Local commits: Plyth `a482366`; Rook `17ebe17`.
 - No model-issued Rook pilot was run in this phase. Fixture expectations are not a substitute for agent predictions; prediction coverage, specificity, token/cache overhead, and latency require controlled live trials.
 
-**Phase 2 status:** observe-only implementation complete; evaluation gate remains open pending live Rook pilot measurements. Do not enable advisory feedback based on synthetic fixture results alone.
+**Phase 2 status:** observe-only implementation is complete. The 2026-11-20 matched-task feasibility runs are documented in `status.md`: both B0 and B1 solved the focused tasks, but B1 evidence matching missed in all four isolated runs and B0 emitted no predictions. This is not enough to claim effectiveness or overhead, and the Phase 2 evidence is weak. Keep feedback default-off; any B2 run is an explicitly experimental, opt-in comparison, not a passed pilot gate.
 
 ### Phase 2 — Rook observe-only pilot
 
@@ -387,6 +387,8 @@ If missed predictions do not predict a useful opportunity, or feedback does not 
 - Enable bounded feedback on specific, scorable misses behind a feature flag.
 - Run B0/B1/B2 paired tests and publish per-task outcomes, cost and uncertainty.
 - Keep mandatory host verification and permissions unchanged.
+
+**Implementation progress (2026-11-20):** Rook has an experimental opt-in arm controlled by `ROOK_PLYTH_FEEDBACK=1`; unset preserves B1 observe-only behavior. It uses the core session gate (specific scorable misses only, deduplication, at most five messages per session), appends to the existing tool result, preserves structured output, and resets per session. Core and adapter tests cover the feedback path. The B0/B1/B2 live evaluation and Phase 3 exit criteria remain pending; do not enable by default or claim benefit.
 
 **Exit:** pilot gates in section 9.4 pass. Otherwise revise or stop.
 
@@ -491,4 +493,4 @@ Use a small fixed set of trap fixtures plus the current Rook coding evaluation. 
 - Codex hooks: https://developers.openai.com/codex/hooks
 - OpenCode plugins: https://opencode.ai/docs/build/plugins
 
-**Status:** proposal only. PLYTH is not implemented; no effectiveness, latency, cost, or novelty result is claimed.
+**Status:** core and Rook observe-only implementation are complete; an opt-in Rook advisory-feedback implementation is in progress. Phase 2 evaluation is limited feasibility evidence, Phase 3 comparative evaluation is pending, and Phase 4/5 remain unimplemented. No effectiveness, latency, cost, or novelty result is claimed.

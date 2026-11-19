@@ -422,6 +422,11 @@ export class SessionFeedbackGate {
     return feedback;
   }
 
+  reset(): void {
+    this.seen.clear();
+    this.emitted = 0;
+  }
+
   get count(): number {
     return this.emitted;
   }

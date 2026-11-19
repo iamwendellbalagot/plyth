@@ -139,6 +139,9 @@ test("session feedback is miss-only, deduplicated, and capped at five", () => {
   }
   assert.equal(gate.count, 5);
   assert.throws(() => new SessionFeedbackGate(6), RangeError);
+  gate.reset();
+  assert.equal(gate.count, 0);
+  assert.match(gate.offer(fixture.start, fixture.finish), /Expected `fail`/);
 });
 
 test("session counters retain verdict denominators without storing events", () => {
