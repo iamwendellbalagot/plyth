@@ -241,7 +241,8 @@ def run_one(base, name, condition, expected_tests):
         except subprocess.TimeoutExpired:
             result["trusted_check"] = {"exit_code": None, "output": "evaluation check timed out"}
     result["success"] = result.get("trusted_check", {}).get("exit_code") == 0 and result["scope_ok"] and result["tests_unchanged"]
-    return result
+    # Evaluation artifacts retain synthetic fixtures only, not machine-local paths.
+    return json.loads(json.dumps(result, ensure_ascii=False).replace(str(workspace), "<workspace>").replace(str(base), "<evaluation-root>"))
 
 
 def main():
@@ -257,6 +258,10 @@ def main():
         base.mkdir(parents=True, exist_ok=True)
         prepare(base)
     else:
+        expected_revision = "b93b5d396f7d65ee44193b297e511237854f0019"
+        for host in (args.rook, base / "b0-host", base / "b1-host"):
+            if git(host, "rev-parse", "HEAD").strip() != expected_revision:
+                raise RuntimeError(f"Host revision does not match the frozen protocol: {host}")
         manifest = json.loads((base / "manifest.json").read_text())
         order = [(n, c) for n in GOALS for c in ("b0", "b1", "b2")]
         random.Random(20261120).shuffle(order)

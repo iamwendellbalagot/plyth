@@ -1,0 +1,489 @@
+[
+  {
+    "task": "pricing",
+    "condition": "b2",
+    "error": null,
+    "settled": true,
+    "code_check_passed": true,
+    "tests_unchanged": true,
+    "scope_ok": true,
+    "test_before_edit": true,
+    "wall_seconds": 58.744,
+    "approval_wait_seconds": 0.406,
+    "usage": {
+      "input": 10539,
+      "output": 933,
+      "cacheRead": 47616,
+      "cacheWrite": 0
+    },
+    "total_reported_tokens": 59088,
+    "tool_calls": 17,
+    "approved_tests": 2,
+    "issued_tests": 2,
+    "scored_tests": 2,
+    "prediction_stats": {
+      "eligibleCommands": 2,
+      "predictedCommands": 2,
+      "invalidPredictions": 0,
+      "specificPredictions": 2,
+      "durationMs": 0,
+      "durationSamples": 0,
+      "verdicts": {
+        "hit": 2,
+        "miss": 0,
+        "vague": 0,
+        "none": 0,
+        "unscorable": 0
+      }
+    },
+    "judgments": [
+      {
+        "command": "node --test tests/unit.test.mjs tests/integration.test.mjs",
+        "prediction": {
+          "outcome": "fail",
+          "evidence": "line totals multiply catalog cents by quantity"
+        },
+        "pass": 2,
+        "fail": 4,
+        "verdict": "hit",
+        "feedback": []
+      },
+      {
+        "command": "node --test tests/unit.test.mjs tests/integration.test.mjs",
+        "prediction": {
+          "outcome": "pass",
+          "evidence": "shipping threshold uses the discounted merchandise amount"
+        },
+        "pass": 6,
+        "fail": 0,
+        "verdict": "hit",
+        "feedback": []
+      }
+    ]
+  },
+  {
+    "task": "pagination",
+    "condition": "b0",
+    "error": null,
+    "settled": true,
+    "code_check_passed": true,
+    "tests_unchanged": true,
+    "scope_ok": true,
+    "test_before_edit": true,
+    "wall_seconds": 73.561,
+    "approval_wait_seconds": 0.403,
+    "usage": {
+      "input": 24672,
+      "output": 1397,
+      "cacheRead": 45696,
+      "cacheWrite": 0
+    },
+    "total_reported_tokens": 71765,
+    "tool_calls": 22,
+    "approved_tests": 2,
+    "issued_tests": 2,
+    "scored_tests": 2,
+    "prediction_stats": null,
+    "judgments": [
+      {
+        "command": "node --test tests/unit.test.mjs tests/integration.test.mjs",
+        "prediction": null,
+        "pass": 3,
+        "fail": 4,
+        "verdict": "none",
+        "feedback": []
+      },
+      {
+        "command": "node --test tests/unit.test.mjs tests/integration.test.mjs",
+        "prediction": null,
+        "pass": 7,
+        "fail": 0,
+        "verdict": "none",
+        "feedback": []
+      }
+    ]
+  },
+  {
+    "task": "cache",
+    "condition": "b0",
+    "error": null,
+    "settled": true,
+    "code_check_passed": true,
+    "tests_unchanged": true,
+    "scope_ok": true,
+    "test_before_edit": true,
+    "wall_seconds": 55.281,
+    "approval_wait_seconds": 0.41,
+    "usage": {
+      "input": 6657,
+      "output": 1152,
+      "cacheRead": 35840,
+      "cacheWrite": 0
+    },
+    "total_reported_tokens": 43649,
+    "tool_calls": 15,
+    "approved_tests": 2,
+    "issued_tests": 2,
+    "scored_tests": 2,
+    "prediction_stats": null,
+    "judgments": [
+      {
+        "command": "node --test tests/unit.test.mjs tests/integration.test.mjs",
+        "prediction": null,
+        "pass": 2,
+        "fail": 4,
+        "verdict": "none",
+        "feedback": []
+      },
+      {
+        "command": "node --test tests/unit.test.mjs tests/integration.test.mjs",
+        "prediction": null,
+        "pass": 6,
+        "fail": 0,
+        "verdict": "none",
+        "feedback": []
+      }
+    ]
+  },
+  {
+    "task": "cache",
+    "condition": "b1",
+    "error": "once approval selection not verified",
+    "settled": false,
+    "code_check_passed": true,
+    "tests_unchanged": true,
+    "scope_ok": true,
+    "test_before_edit": true,
+    "wall_seconds": 70.247,
+    "approval_wait_seconds": 0.205,
+    "usage": {
+      "input": 15543,
+      "output": 1364,
+      "cacheRead": 38400,
+      "cacheWrite": 0
+    },
+    "total_reported_tokens": 55307,
+    "tool_calls": 18,
+    "approved_tests": 1,
+    "issued_tests": 2,
+    "scored_tests": 1,
+    "prediction_stats": {
+      "eligibleCommands": 1,
+      "predictedCommands": 1,
+      "invalidPredictions": 0,
+      "specificPredictions": 1,
+      "durationMs": 0,
+      "durationSamples": 0,
+      "verdicts": {
+        "hit": 1,
+        "miss": 0,
+        "vague": 0,
+        "none": 0,
+        "unscorable": 0
+      }
+    },
+    "judgments": [
+      {
+        "command": "node --test tests/unit.test.mjs tests/integration.test.mjs",
+        "prediction": {
+          "outcome": "fail",
+          "evidence": "entry expires exactly at the boundary"
+        },
+        "pass": 2,
+        "fail": 4,
+        "verdict": "hit",
+        "feedback": []
+      }
+    ]
+  },
+  {
+    "task": "pagination",
+    "condition": "b1",
+    "error": null,
+    "settled": true,
+    "code_check_passed": true,
+    "tests_unchanged": true,
+    "scope_ok": true,
+    "test_before_edit": true,
+    "wall_seconds": 56.854,
+    "approval_wait_seconds": 0.416,
+    "usage": {
+      "input": 17683,
+      "output": 1089,
+      "cacheRead": 32640,
+      "cacheWrite": 0
+    },
+    "total_reported_tokens": 51412,
+    "tool_calls": 18,
+    "approved_tests": 2,
+    "issued_tests": 2,
+    "scored_tests": 2,
+    "prediction_stats": {
+      "eligibleCommands": 2,
+      "predictedCommands": 2,
+      "invalidPredictions": 0,
+      "specificPredictions": 2,
+      "durationMs": 0,
+      "durationSamples": 0,
+      "verdicts": {
+        "hit": 2,
+        "miss": 0,
+        "vague": 0,
+        "none": 0,
+        "unscorable": 0
+      }
+    },
+    "judgments": [
+      {
+        "command": "node --test tests/unit.test.mjs tests/integration.test.mjs",
+        "prediction": {
+          "outcome": "fail",
+          "evidence": "numeric zero is a valid continuation cursor"
+        },
+        "pass": 3,
+        "fail": 4,
+        "verdict": "hit",
+        "feedback": []
+      },
+      {
+        "command": "node --test tests/unit.test.mjs tests/integration.test.mjs",
+        "prediction": {
+          "outcome": "pass",
+          "evidence": "follows cursors across empty pages and preserves first-seen items"
+        },
+        "pass": 7,
+        "fail": 0,
+        "verdict": "hit",
+        "feedback": []
+      }
+    ]
+  },
+  {
+    "task": "cache",
+    "condition": "b2",
+    "error": null,
+    "settled": true,
+    "code_check_passed": true,
+    "tests_unchanged": true,
+    "scope_ok": true,
+    "test_before_edit": true,
+    "wall_seconds": 51.844,
+    "approval_wait_seconds": 0.419,
+    "usage": {
+      "input": 12931,
+      "output": 1057,
+      "cacheRead": 30336,
+      "cacheWrite": 0
+    },
+    "total_reported_tokens": 44324,
+    "tool_calls": 14,
+    "approved_tests": 2,
+    "issued_tests": 2,
+    "scored_tests": 2,
+    "prediction_stats": {
+      "eligibleCommands": 2,
+      "predictedCommands": 2,
+      "invalidPredictions": 0,
+      "specificPredictions": 2,
+      "durationMs": 0,
+      "durationSamples": 0,
+      "verdicts": {
+        "hit": 2,
+        "miss": 0,
+        "vague": 0,
+        "none": 0,
+        "unscorable": 0
+      }
+    },
+    "judgments": [
+      {
+        "command": "node --test tests/unit.test.mjs tests/integration.test.mjs",
+        "prediction": {
+          "outcome": "fail",
+          "evidence": "entry expires exactly at the boundary"
+        },
+        "pass": 2,
+        "fail": 4,
+        "verdict": "hit",
+        "feedback": []
+      },
+      {
+        "command": "node --test tests/unit.test.mjs tests/integration.test.mjs",
+        "prediction": {
+          "outcome": "pass",
+          "evidence": "in-flight loads coalesce even when the clock passes the TTL"
+        },
+        "pass": 6,
+        "fail": 0,
+        "verdict": "hit",
+        "feedback": []
+      }
+    ]
+  },
+  {
+    "task": "pagination",
+    "condition": "b2",
+    "error": null,
+    "settled": true,
+    "code_check_passed": true,
+    "tests_unchanged": true,
+    "scope_ok": true,
+    "test_before_edit": true,
+    "wall_seconds": 58.815,
+    "approval_wait_seconds": 0.415,
+    "usage": {
+      "input": 13248,
+      "output": 1217,
+      "cacheRead": 37504,
+      "cacheWrite": 0
+    },
+    "total_reported_tokens": 51969,
+    "tool_calls": 18,
+    "approved_tests": 2,
+    "issued_tests": 2,
+    "scored_tests": 2,
+    "prediction_stats": {
+      "eligibleCommands": 2,
+      "predictedCommands": 2,
+      "invalidPredictions": 0,
+      "specificPredictions": 2,
+      "durationMs": 0,
+      "durationSamples": 0,
+      "verdicts": {
+        "hit": 2,
+        "miss": 0,
+        "vague": 0,
+        "none": 0,
+        "unscorable": 0
+      }
+    },
+    "judgments": [
+      {
+        "command": "node --test tests/unit.test.mjs tests/integration.test.mjs",
+        "prediction": {
+          "outcome": "fail",
+          "evidence": "numeric zero is a valid continuation cursor"
+        },
+        "pass": 3,
+        "fail": 4,
+        "verdict": "hit",
+        "feedback": []
+      },
+      {
+        "command": "node --test tests/unit.test.mjs tests/integration.test.mjs",
+        "prediction": {
+          "outcome": "pass",
+          "evidence": "follows cursors across empty pages and preserves first-seen items"
+        },
+        "pass": 7,
+        "fail": 0,
+        "verdict": "hit",
+        "feedback": []
+      }
+    ]
+  },
+  {
+    "task": "pricing",
+    "condition": "b0",
+    "error": null,
+    "settled": true,
+    "code_check_passed": true,
+    "tests_unchanged": true,
+    "scope_ok": true,
+    "test_before_edit": true,
+    "wall_seconds": 53.75,
+    "approval_wait_seconds": 0.408,
+    "usage": {
+      "input": 6937,
+      "output": 886,
+      "cacheRead": 41216,
+      "cacheWrite": 0
+    },
+    "total_reported_tokens": 49039,
+    "tool_calls": 18,
+    "approved_tests": 2,
+    "issued_tests": 2,
+    "scored_tests": 2,
+    "prediction_stats": null,
+    "judgments": [
+      {
+        "command": "node --test tests/unit.test.mjs tests/integration.test.mjs",
+        "prediction": null,
+        "pass": 2,
+        "fail": 4,
+        "verdict": "none",
+        "feedback": []
+      },
+      {
+        "command": "node --test tests/unit.test.mjs tests/integration.test.mjs",
+        "prediction": null,
+        "pass": 6,
+        "fail": 0,
+        "verdict": "none",
+        "feedback": []
+      }
+    ]
+  },
+  {
+    "task": "pricing",
+    "condition": "b1",
+    "error": null,
+    "settled": true,
+    "code_check_passed": true,
+    "tests_unchanged": true,
+    "scope_ok": true,
+    "test_before_edit": true,
+    "wall_seconds": 55.665,
+    "approval_wait_seconds": 0.407,
+    "usage": {
+      "input": 19529,
+      "output": 916,
+      "cacheRead": 30208,
+      "cacheWrite": 0
+    },
+    "total_reported_tokens": 50653,
+    "tool_calls": 18,
+    "approved_tests": 2,
+    "issued_tests": 2,
+    "scored_tests": 2,
+    "prediction_stats": {
+      "eligibleCommands": 2,
+      "predictedCommands": 2,
+      "invalidPredictions": 0,
+      "specificPredictions": 2,
+      "durationMs": 0,
+      "durationSamples": 0,
+      "verdicts": {
+        "hit": 2,
+        "miss": 0,
+        "vague": 0,
+        "none": 0,
+        "unscorable": 0
+      }
+    },
+    "judgments": [
+      {
+        "command": "node --test tests/unit.test.mjs tests/integration.test.mjs",
+        "prediction": {
+          "outcome": "fail",
+          "evidence": "line totals multiply catalog cents by quantity"
+        },
+        "pass": 2,
+        "fail": 4,
+        "verdict": "hit",
+        "feedback": []
+      },
+      {
+        "command": "node --test tests/unit.test.mjs tests/integration.test.mjs",
+        "prediction": {
+          "outcome": "pass",
+          "evidence": "shipping threshold uses the discounted merchandise amount"
+        },
+        "pass": 6,
+        "fail": 0,
+        "verdict": "hit",
+        "feedback": []
+      }
+    ]
+  }
+]

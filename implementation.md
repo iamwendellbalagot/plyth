@@ -384,6 +384,8 @@ If missed predictions do not predict a useful opportunity, or feedback does not 
 
 ### Phase 3 — Rook advisory feedback
 
+**Decision (2026-11-20): bounded evaluation complete — NO-GO for advisory-product expansion.** Positive exit gates were not passed. The final same-revision B0/B1/B2 evaluation across three multi-file tasks accepted all 9 submitted repairs, but one B1 session was interrupted by approval automation before final agent verification. All 11 completed B1/B2 predictions were specific hits; B2 delivered zero messages. There is no natural intervention effect or demonstrated quality-adjusted efficiency improvement. Stop this evaluation loop; preserve experimental code default-off and do not advance to Phase 4 on an unsupported effectiveness claim. See `evals/phase3-final/report.md` for the preregistered protocol, retained data, uncertainty, and an explicit distinction between an investment no-go and proof of universal ineffectiveness. Earlier progress notes below are historical, not an instruction to keep running trials.
+
 - Enable bounded feedback on specific, scorable misses behind a feature flag.
 - Run B0/B1/B2 paired tests and publish per-task outcomes, cost and uncertainty.
 - Keep mandatory host verification and permissions unchanged.
@@ -499,4 +501,4 @@ Use a small fixed set of trap fixtures plus the current Rook coding evaluation. 
 - Codex hooks: https://developers.openai.com/codex/hooks
 - OpenCode plugins: https://opencode.ai/docs/build/plugins
 
-**Status:** core and Rook observe-only implementation are complete; an opt-in Rook advisory-feedback implementation is in progress. Phase 2 evaluation is limited feasibility evidence, Phase 3 comparative evaluation is pending, and Phase 4/5 remain unimplemented. No effectiveness, latency, cost, or novelty result is claimed.
+**Status:** core, Rook observe-only, and experimental opt-in feedback implementation are complete. The bounded Phase 3 decision evaluation is complete with a NO-GO recommendation for advisory expansion; benefit and overhead gates were not passed. Feedback remains default-off; Phase 4/5 are unimplemented and paused pending an explicit scope/research decision. No effectiveness, latency, cost, or novelty benefit is claimed.

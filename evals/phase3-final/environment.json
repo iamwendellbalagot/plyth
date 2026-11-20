@@ -1,0 +1,25 @@
+{
+  "platform": "Darwin",
+  "platform_release": "24.6.0",
+  "architecture": "arm64",
+  "python": "3.14.5",
+  "node": "v26.10.0",
+  "rook_revision": "b93b5d396f7d65ee44193b297e511237854f0019",
+  "plyth_source_revision": "15b2bcedc4a6cb16fc983b7fe83431f277fca443",
+  "preregister_commit": "3740735",
+  "seed": 20261120,
+  "order": [
+    ["pricing", "b2"],
+    ["pagination", "b0"],
+    ["cache", "b0"],
+    ["cache", "b1"],
+    ["pagination", "b1"],
+    ["cache", "b2"],
+    ["pagination", "b2"],
+    ["pricing", "b0"],
+    ["pricing", "b1"]
+  ],
+  "baseline_patch_sha256": "48220fdb3af8dc568412a803cefaff39dc844d2f217647f97c9df1844799a725",
+  "redaction": "machine-local workspace roots replaced with <workspace>; no host prompts, auth data or reasoning captured",
+  "runner_post_run_changes": "Added path redaction and pinned-revision guard after collection; agent implementation, prompts, fixtures, order and budgets unchanged."
+}
