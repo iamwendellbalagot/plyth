@@ -3,7 +3,7 @@
 ## Direction
 
 - Pivot: lightweight change review that challenges unjustified complexity while preserving required behavior.
-- Full design: [plan.md](plan.md). New review functionality is not yet implemented.
+- Full design: [plan.md](plan.md). The minimal prompt/invocation prototype is in progress.
 - Rook first; other coding-agent adapters are deferred.
 
 ## Existing implementation and evidence
@@ -18,10 +18,10 @@
 
 ## Active / next
 
-- Audit existing Rook review and quality-guidance capabilities before building anything. Rook already has `/review`, a separate read-only review path, and simplicity guidance.
-- Prototype the smallest differentiated review against a simple prompt baseline. No provider runs or inference budget have been approved.
+- Rook audit found an existing explicit `/review` path; the PLYTH prompt builder and Rook `/review simplicity` prototype are implemented and focused checks pass.
+- Freeze offline review cases next. No provider runs or inference budget have been approved.
 - Preserve legacy PLYTH APIs and Rook integration until a replacement is explicitly validated and migrated.
 
 ## Validation
 
-- Documentation changes only: run Markdown/reference inspection and `git diff --check`. Historical code-test results are not current verification.
+- PLYTH: `npm test` (13 tests), build, formatting and diff checks pass. Rook: focused review/TUI tests (44), typecheck, formatting and diff checks pass. No live review comparison was run.

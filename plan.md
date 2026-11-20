@@ -36,6 +36,8 @@ These are hypotheses, not product claims. Less code does not automatically mean 
 - Earlier live comparisons did not demonstrate a coding-quality benefit. In the latest nine runs all tasks passed and no feedback intervention occurred. Preserve `evals/phase3-final/report.md` and `evals/latest-features-live/report.md` as historical evidence.
 - Rook's `src/pi/execution-policy.ts` already asks for small clear solutions, existing architecture, no speculative abstractions/dependencies, focused tests, and diff inspection.
 - The new product must outperform this existing guidance and a concise additional review instruction. Repackaging those sentences is not sufficient justification for a subsystem.
+- **Rook audit (2026-11-20):** `/review` already starts a separate, read-only Pi session using the selected model. Its prompt checks correctness, regressions, and missing tests, but does not assess necessity/simplification and receives no task intent. It reviews a Git view capped at 50 KiB: status includes untracked paths but their contents are omitted; the diff is against `HEAD` and may include pre-existing user changes. Therefore it cannot claim task attribution or complete coverage. Reuse this explicit entry point and same inference rather than adding an automatic reviewer or agent.
+- **Prototype started (2026-11-20):** PLYTH exports a bounded simplicity-review prompt builder; Rook exposes it as `/review simplicity` alongside the existing `/review` generic control. Both can use the same recent user context, bounded to 6000 characters. This is prompt/integration plumbing only; no provider comparison or effectiveness claim has run.
 
 Do not revive prediction scoring, hypothesis ledgers, verification sidecars, or broad execution-memory features as prerequisites for this pivot.
 
@@ -312,7 +314,7 @@ Exit: a single active repository plan, concise factual handoff, obsolete impleme
 
 ### Phase 1 — Prompt and opportunity audit
 
-Current active implementation phase. Do not run provider-backed comparisons or incur inference cost without separately agreeing the fixed cases, settings, and budget.
+The Rook capability audit is complete. The offline case set and any provider comparison remain pending; do not incur inference cost without separately agreeing the fixed cases, settings, and budget.
 
 - Review overlap with Rook's current quality guidance and supported review entry points.
 - Freeze the offline cases and generic versus targeted review prompts.
@@ -322,6 +324,8 @@ Current active implementation phase. Do not run provider-backed comparisons or i
 Exit: actionable differentiated reviews exist at acceptable cost. Otherwise keep a prompt-only improvement or stop.
 
 ### Phase 2 — Minimal explicit Rook integration
+
+**Prototype in progress (2026-11-20):** adds `buildChangeReviewPrompt` to the PLYTH core and an explicit `/review simplicity` focus to Rook's existing read-only reviewer. Existing `/review` remains the generic control; both include the same bounded recent user context. No new provider call is added beyond the explicit review invocation. The current Git view's attribution/untracked-file limitations are disclosed in both prompts. Focused PLYTH/Rook tests and typecheck pass; no live review comparison has run. Freeze offline cases before any separately authorized provider comparison.
 
 - Implement only the bounded review contract and supported explicit invocation.
 - Reuse existing repository inspection and provider handling.
