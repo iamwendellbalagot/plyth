@@ -31,7 +31,9 @@ not a published multi-agent release. Other-host integrations are deferred.
 ## Implemented Rook-first capabilities
 
 - Experimental bounded prompt builder for read-only reviews of whether change
-  complexity is justified, with task-context and diff-size bounds.
+  complexity is justified, with task-context, diff-size, finding-schema, and
+  output-size bounds. Hosts still own repository scope, model-call limits and
+  permission enforcement.
 - Versioned bounded event validation, deterministic outcome/evidence judgments,
   and fail-open normalization of unknown results.
 - Coverage/verdict/duration counters and a capped, deduplicated session-feedback gate.

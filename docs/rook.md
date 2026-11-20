@@ -9,6 +9,14 @@ reused, and whether tests cover distinct behavior. It requires a concrete,
 grounded alternative before challenging code and protects correctness, security,
 compatibility, error handling, observability, and meaningful test coverage.
 
+Optionally scope a review to changed repository-relative files with repeated
+`--file` options, for example `/review simplicity --file src/retry.ts --file tests/retry.test.ts`.
+At most 20 paths are accepted. Paths containing spaces are not supported by
+this command syntax. The selected paths must be safe paths that are currently
+changed; unsafe paths, unchanged paths, and paths outside the repository are
+rejected. Without `--file`, the existing bounded whole-workspace Git view is
+used.
+
 This is an explicit user-invoked review, not automatic coaching. It uses Rook's
 existing read-only review call and permission/tool boundaries; it does not edit
 files or execute tests. The invocation makes one separate request to the selected
@@ -19,11 +27,19 @@ unproven.
 The prompt includes up to the latest three user messages (at most 6000
 characters) as task-intent context. It receives Rook's current Git status and
 diff view, capped at 50 KiB. That view may include pre-existing staged/unstaged
-changes and lists untracked paths without their contents. The reviewer is told
-not to infer task attribution or claim complete coverage when scope is unclear.
-For sensitive or mixed-workspace changes, inspect the supplied scope before
-using the result; do not treat an empty report as proof that every change was
-reviewed or that the patch is correct. Review text and code are handled under
+changes and lists untracked paths without their contents; the reviewer may read
+selected untracked files only through Rook's safe read-only tools. The reviewer
+is told not to infer task attribution or claim complete coverage when scope is
+unclear. Findings must be valid JSON, limited to three, point only to selected
+paths when provided, and include observed evidence, a concrete alternative, and
+what must be preserved. Invalid or oversized output is reported as an invalid
+review, never as “no findings.” The output is limited to 16 KiB; this protects
+handling but does not cap provider generation tokens.
+
+Rook allows at most 20 selected paths and 120 seconds for the review. It displays
+actual input/output/cache token counts from Pi when available; this is not a
+provider-billed dollar estimate. Cancelling `/cancel` aborts the temporary review
+session and removes it after cleanup. Review text and code are handled under
 Rook/Pi's ordinary session-history and provider privacy behavior.
 
 After the simplicity review returns, Rook compares the Git view with the captured
