@@ -394,6 +394,8 @@ If missed predictions do not predict a useful opportunity, or feedback does not 
 
 **Post-correction live check (2026-11-20):** On one isolated port-boundary B0/B1/B2 triplet, all conditions fixed the same issue and passed all 5 tests. B1/B2 both made a specific initial `fail` prediction whose evidence named a failed test and a specific final `pass` prediction whose evidence named a passed test; each scored two hits and zero misses. B2 emitted no feedback. This validates status-aware live scoring but supplies no intervention-effect evidence; Phase 3 remains open and feedback default-off.
 
+**Post-fix natural holdout (2026-11-20):** Added three varied tasks (seat reservation idempotence, same-origin redirect validation, page-count rounding), each in isolated B0/B1/B2 workspaces. All 9 runs made the same correct repairs and passed their final suites; B1/B2 each scored all 6 eligible predictions as specific hits, with no misses or feedback. Approximate task timings ranged 31.8–70.5 seconds; provider token/cache counts varied substantially by arm and task, so no efficiency claim is supported. The corrected status-aware evidence path now scores these ordinary Node test outcomes as expected, but no natural B2 intervention has yet been observed. Phase 3 effectiveness and cost gates remain open; keep feedback opt-in.
+
 **Exit:** pilot gates in section 9.4 pass. Otherwise revise or stop.
 
 ### Phase 4 — Second adapter and product packaging
