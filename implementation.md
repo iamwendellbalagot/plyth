@@ -392,6 +392,8 @@ If missed predictions do not predict a useful opportunity, or feedback does not 
 
 **Evidence-label correction (2026-11-20):** Rook now preserves status for Node's spec-reporter test names during evidence extraction: `pass` results expose only `✔` names and `fail` results only `✖` names. Output from other test reporters and build/diagnostic commands retains the prior bounded-line fallback. Focused adapter regression tests verify that a passing Node test name cannot validate a failed-test prediction, and that matching failed/passing labels still score as hits. Adapter tests, typecheck, build, formatting, and diff checks pass. Run a new natural paired B0/B1/B2 trial before claiming that the corrected evidence mechanism improves recovery; keep feedback default-off.
 
+**Post-correction live check (2026-11-20):** On one isolated port-boundary B0/B1/B2 triplet, all conditions fixed the same issue and passed all 5 tests. B1/B2 both made a specific initial `fail` prediction whose evidence named a failed test and a specific final `pass` prediction whose evidence named a passed test; each scored two hits and zero misses. B2 emitted no feedback. This validates status-aware live scoring but supplies no intervention-effect evidence; Phase 3 remains open and feedback default-off.
+
 **Exit:** pilot gates in section 9.4 pass. Otherwise revise or stop.
 
 ### Phase 4 — Second adapter and product packaging
