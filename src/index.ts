@@ -46,6 +46,7 @@ export interface SessionPredictionStats {
   durationMs: number;
   durationSamples: number;
   verdicts: SessionCounts;
+  baseline?: import("./baseline.js").HistoryBaselineStats;
 }
 
 export interface HostCommandResult {
@@ -492,3 +493,6 @@ function valid<T>(value: T): Validation<T> {
 function invalid(reason: string): Validation<never> {
   return { ok: false, reason };
 }
+export * from "./baseline.ts";
+export * from "./trace.ts";
+export * from "./statistics.ts";

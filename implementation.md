@@ -6,6 +6,8 @@
 **Primary pilot:** Rook
 **Initial implementation:** TypeScript library and thin agent adapters
 
+**Current scope (2026-11-20):** complete the Rook-first implementation. All other coding-agent adapters (including OpenCode, Claude Code and Codex) are explicitly deferred. Feature completeness and feedback effectiveness are separate decisions; earlier Phase 3 no-go findings apply to the evaluated prediction/feedback pilot, not an assertion that all planned core features were already implemented. See `README.md` and `docs/rook.md` for the implemented contracts and limits.
+
 ---
 
 ## 1. Summary
@@ -59,7 +61,7 @@ These are hypotheses, not established results. A result showing no benefit is a 
 - Event records and per-session hit/miss/vague/none counts.
 - A simple history baseline for detecting trivial predictions.
 - A short, capped, advisory response on qualifying misses.
-- Rook pilot adapter and at least one external-host feasibility adapter.
+- Rook reference adapter. Other-host integrations are deferred; historical feasibility probes do not imply product support.
 - Offline fixtures and paired evaluation against unchanged host behavior.
 - Opt-in local JSONL trace storage with minimal metadata.
 
@@ -136,6 +138,8 @@ v0.1 includes a small baseline, not a learned model:
 - Invalidate that history when the adapter reports relevant workspace changes, or mark it unavailable if reliable invalidation is not possible.
 - Report agent prediction accuracy beside baseline accuracy where predictions are comparable.
 - Do not award extra credit for predicting only the majority outcome.
+
+**Implemented:** `CommandHistoryBaseline` compares model and last-outcome forecasts on the same outcome-only denominator, bounds history, rejects changed/unavailable revisions, and invalidates pending forecasts across mutations. Rook supplies a bounded workspace-file snapshot and invalidates on edits and unknown tool mutations. Large, linked, sensitive or unobservable inputs yield unavailable comparisons. This is not an environment/network/dependency-state oracle; exact capabilities are documented in `docs/rook.md`.
 
 The baseline cannot establish a counterfactual. It says only what a simple rule would have predicted from prior observations. For commands whose inputs, environment, or relevant files changed, the old result is not a valid forecast.
 
@@ -223,6 +227,8 @@ Validate request size, string lengths, enum values, and event ordering at the ad
 
 Default behavior is in-memory session counts only. Optional local JSONL stores minimal fields: protocol version, adapter version, pseudonymous session/repository key, command class, prediction outcome, verdict, duration bucket, and timestamps at coarse precision. Avoid raw command text, output, evidence strings, prompts, file contents, absolute paths, credentials, and user identifiers.
 
+**Implemented Rook profile:** core `createTraceRecord`/`parseTraceRecord` whitelist the wire record. Rook owns private bounded JSONL I/O and `/plyth trace status|on|off|export|clear`. The record uses a random session pseudonym and no repository identifier or command digest; it additionally stores observed outcome and baseline comparability/correctness flags. Persistence is independent of advisory feedback and off by default. See `docs/rook.md` for fields, the 64 KiB cap, fail-open storage and deletion/retention semantics.
+
 If a command digest is enabled, use a documented normalization and a per-installation salt so hashes are not trivially reversible through a global dictionary. Provide a disable switch and a deletion/export path. No telemetry leaves the machine without explicit configuration.
 
 ### 6.5 Failure behavior
@@ -260,6 +266,8 @@ Mathematics should summarize observed prediction quality and support honest eval
 1. **Hit/miss counters:** counts by adapter, model label if the host safely supplies one, repository pseudonym if enabled, and command class. Keep denominators for all verdict categories.
 2. **Simple baseline comparison:** compare only on examples where baseline and agent predictions can be scored against the same observed outcome.
 3. **Offline uncertainty estimates:** report confidence intervals for paired success, overhead, and miss-associated failure rates. Use paired bootstrap for task-level cost/time and suitable exact or interval estimates for small binary samples. Always show sample sizes and per-task outcomes.
+
+**Implemented utilities:** `binaryInterval` returns descriptive Wilson intervals with explicit empty denominators; `pairedBootstrapDifference` provides seeded task-paired treatment-minus-baseline intervals with input bounds and no interval for a single pair. These offline functions do not steer runtime behavior or manufacture estimates for unavailable evaluation data. Small correlated samples still cannot establish effectiveness or isolated overhead.
 
 Beta-binomial rates may be added for descriptive dashboards when useful, but v0.1 must not use a prior-smoothed hit rate to trigger interventions. With a small pilot, counts plus uncertainty are clearer and less likely to imply unjustified calibration.
 
@@ -384,6 +392,8 @@ If missed predictions do not predict a useful opportunity, or feedback does not 
 
 ### Phase 3 — Rook advisory feedback
 
+**Rook-first completion update (2026-11-20):** the prior bounded study is retained as historical evidence of insufficient benefit. A subsequent source audit identified the missing planned history baseline and opt-in trace ledger. The user authorized completing those features and deferring other-host integrations. The baseline, trace schema/Rook storage and controls, explicit off/observe/feedback modes, offline uncertainty helpers and setup/privacy/capability documentation are now implemented. This completes the Rook-first functional scope, not the effectiveness gates below. Do not reinterpret the old study as testing these newly completed features or enable feedback by default.
+
 **Decision (2026-11-20): bounded evaluation complete — NO-GO for advisory-product expansion.** Positive exit gates were not passed. The final same-revision B0/B1/B2 evaluation across three multi-file tasks accepted all 9 submitted repairs, but one B1 session was interrupted by approval automation before final agent verification. All 11 completed B1/B2 predictions were specific hits; B2 delivered zero messages. There is no natural intervention effect or demonstrated quality-adjusted efficiency improvement. Stop this evaluation loop; preserve experimental code default-off and do not advance to Phase 4 on an unsupported effectiveness claim. See `evals/phase3-final/report.md` for the preregistered protocol, retained data, uncertainty, and an explicit distinction between an investment no-go and proof of universal ineffectiveness. Earlier progress notes below are historical, not an instruction to keep running trials.
 
 - Enable bounded feedback on specific, scorable misses behind a feature flag.
@@ -400,13 +410,15 @@ If missed predictions do not predict a useful opportunity, or feedback does not 
 
 **Exit:** pilot gates in section 9.4 pass. Otherwise revise or stop.
 
-### Phase 4 — Second adapter and product packaging
+### Phase 4 — Rook-first packaging; other adapters deferred
 
-- Implement the host with the cleanest proven prediction carrier and context-return mechanism (Claude Code is a candidate, not a commitment).
-- Publish adapter capability levels and setup instructions.
+- Publish Rook setup, capability limits, modes and privacy/export/deletion instructions.
+- Validate local package consumption and the Rook-specific contracts. No second-host adapter is required for the current scope.
 - Add offline `plyth review` only if trace data shows it helps users diagnose real failures.
 
-**Exit:** shared fixtures behave consistently across two hosts and adapter differences are documented.
+**Implementation status:** Rook-first documentation and package metadata are present; other-host implementations and cross-host parity checks are deferred. Package readiness does not grant an effectiveness claim or turn feedback on by default.
+
+**Exit for Rook-first implementation:** shared core fixtures and focused Rook integration checks pass, and setup/capability/privacy limitations are documented. Cross-host fixture parity becomes a requirement only if a second adapter is explicitly authorized.
 
 ### Phase 5 — Conditional research extensions
 
@@ -468,7 +480,7 @@ The idea of predictions followed by prediction-error feedback is not claimed as 
 1. A versioned TypeScript core validates and scores supported predictions deterministically.
 2. Malformed, missing, truncated, cancelled and host-specific results are handled without unsafe guessing or blocking the host.
 3. Rook's reference adapter preserves the exact command and existing permission behavior.
-4. One external-agent adapter has a demonstrated prediction carrier and model-visible feedback path, or the project explicitly ships as Rook-first without claiming broad support.
+4. Ship explicitly as Rook-first without claiming broad agent support. Other coding-agent adapters and cross-host fixture parity are deferred by scope decision.
 5. The default ledger stores only documented minimal metadata and is local, optional and deletable.
 6. Observe-only, logging-only and feedback modes can be compared independently.
 7. Reproducible paired evaluations report task success, cost, tokens, latency, prediction coverage and uncertainty.
@@ -501,4 +513,4 @@ Use a small fixed set of trap fixtures plus the current Rook coding evaluation. 
 - Codex hooks: https://developers.openai.com/codex/hooks
 - OpenCode plugins: https://opencode.ai/docs/build/plugins
 
-**Status:** core, Rook observe-only, and experimental opt-in feedback implementation are complete. The bounded Phase 3 decision evaluation is complete with a NO-GO recommendation for advisory expansion; benefit and overhead gates were not passed. Feedback remains default-off; Phase 4/5 are unimplemented and paused pending an explicit scope/research decision. No effectiveness, latency, cost, or novelty benefit is claimed.
+**Status:** the Rook-first functional implementation now includes validation/judging, counters, bounded feedback, revision-invalidated history comparison, opt-in minimal traces with local export/deletion controls, independent modes, and offline uncertainty utilities. Setup/privacy/capability documentation is included. Other coding-agent integrations are deferred. The earlier bounded evaluation remains insufficient benefit evidence and predates the newly completed baseline/trace features; no effectiveness, isolated-overhead, savings or novelty benefit is claimed. Feedback stays default-off; conditional Phase 5 research remains outside this completion scope.

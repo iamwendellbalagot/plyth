@@ -2,6 +2,10 @@
 
 ## Current state
 
+- **Current scope: Rook-first feature completion; other coding-agent integrations deferred by the user.** Implemented the missing command-history baseline, strict minimal trace schema and Rook opt-in JSONL storage/controls, explicit off/observe/feedback modes, and offline uncertainty helpers. The earlier no-go below is historical benefit evidence from the pre-completion pilot, not a finding that a fully implemented v0.1 was tested. See `README.md` and `docs/rook.md` for the completed functional contract and limitations.
+- Core history compares outcome forecasts on the same denominator, bounds memory, invalidates edits/changed or unavailable revisions, resets by session, and protects against older parallel completions replacing newer observations. Rook supplies bounded workspace-file snapshots; large/linked/sensitive/unobservable inputs make the comparison unavailable rather than pretending state was unchanged. It is not a model of network/environment/dependency state.
+- Traces are independent of feedback and off by default. Core projection/parsing whitelists coarse time/duration, enums, random session pseudonyms, mode/advisory-appended and baseline-correctness flags. Rook owns private 64 KiB capped local JSONL storage, fail-open errors, safe export and explicit deletion. No raw commands, output, evidence, prompts, paths or host IDs are persisted. `/plyth` shows matched agent/history outcome counts; `/plyth trace status|on|off|export|clear` manages persistence without inference. `ROOK_PLYTH_MODE=off` removes schema/guidance/extension for same-host baseline runs.
+- Offline `binaryInterval` and seeded `pairedBootstrapDifference` report sample sizes and unavailable empty/single-pair intervals; they are not runtime steering policies. Added Rook setup, privacy, retention, safe-file/platform and capability documentation and included it in package contents. Feedback effectiveness, representative overhead and the 2% target remain unproven; no new provider-backed efficacy claim is made by this implementation work.
 - **Phase 3 bounded evaluation complete: NO-GO for advisory-product expansion.** The gates were not passed; stop this trial loop rather than interpreting more prediction hits as value. Keep existing feedback code experimental/default-off. Do not start Phase 4 on an effectiveness claim or run another study without a new user decision. Full decision, per-task numbers, uncertainty and reproduction: `evals/phase3-final/report.md`. Historical notes below are superseded by this disposition.
 - Final frozen multi-file evaluation: pagination, concurrent TTL cache, and pricing × B0/B1/B2, same Rook revision with a baseline-only schema/extension patch. All 9 submitted repairs passed original immutable tests (19 checks per arm); 8 agent sessions completed final verification, while cache/B1 was interrupted by approval automation before its second test. Retained without replacement; excluded from completed-task efficiency comparison. B1/B2 made 11 specific completed predictions, all hits; B2 delivered 0 messages. On both complete three-arm tasks B2 was slower and used more total reported tokens than B1, but no feedback occurred, so this is not causal slowdown evidence. Benefit and isolated overhead remain unproven; this is an investment no-go under insufficient evidence, not universal ineffectiveness.
 - Protocol was committed before provider runs (`3740735`). Fixtures, exact prompts, trusted hashes, baseline patch, synthetic raw results, replay summary and offline repaired controls are retained in `evals/phase3-final/`. Core tests/build, focused Rook adapter tests and all starter/repair controls pass. Temporary evaluator workspaces are disposable; user-owned Rook assets remain untouched.
@@ -33,6 +37,7 @@
 
 ## Verification
 
+- Rook-first completion verification: `npm test` (12 tests), `npm run build`, `npm pack --dry-run` (includes `docs/rook.md` and all compiled API modules), Prettier, and `git diff --check` pass in Plyth. In Rook, 70 focused adapter/storage/gateway/TUI/SDK tests pass; 8 focused Bash tests pass (1 skipped), as do typecheck, build, Prettier and diff checks. These establish implementation behavior only, not feedback effectiveness.
 - `npm test` — 6 tests passed.
 - `npm run build` — passed.
 - `npx --yes prettier --check src/index.ts tests/core.test.mjs tests/fixtures/judgments.json package.json tsconfig.json` — passed.
@@ -45,6 +50,7 @@
 
 ## Pending
 
-- Await user choice: archive advisory research, deliberately narrow to observe-only diagnostics, or authorize a genuinely different research study. No further synthetic trials are pending automatically.
+- Rook-first functional scope is implemented; maintain and use the documented bounded capabilities. Other-host adapters and cross-host parity are explicitly deferred, not implementation blockers.
+- If the user later requests effectiveness evaluation, use the completed baseline/trace/mode controls and distinguish implementation validation from a coding-quality result. No new provider trial or automatic feedback enablement is pending.
 - No benefit, dollar savings or isolated 2% overhead claim is supported. The final report distinguishes source acceptance from completed agent verification and retains the automation interruption.
-- Preserve OpenCode as feasibility evidence only. Phase 4/5 remain unimplemented and paused by the no-go decision. Native macOS host-shell approval is not sandbox validation.
+- Preserve OpenCode as historical feasibility evidence only. Conditional Phase 5 research is out of scope. Native macOS host-shell approval is not sandbox validation.
