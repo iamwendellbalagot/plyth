@@ -1,5 +1,37 @@
 # Rook adapter: setup, capabilities and privacy
 
+## Change-simplicity review (experimental)
+
+Rook's existing `/review` runs a separate read-only review using the selected
+model. `/review simplicity` uses PLYTH's prompt to ask whether additions are
+necessary for the requested outcome, whether existing project facilities can be
+reused, and whether tests cover distinct behavior. It requires a concrete,
+grounded alternative before challenging code and protects correctness, security,
+compatibility, error handling, observability, and meaningful test coverage.
+
+This is an explicit user-invoked review, not automatic coaching. It uses Rook's
+existing read-only review call and permission/tool boundaries; it does not edit
+files or execute tests. The invocation makes one separate request to the selected
+model, so it uses additional provider tokens. It is not a free deterministic
+check. No comparative review evaluation has been run, and effectiveness is
+unproven.
+
+The prompt includes up to the latest three user messages (at most 6000
+characters) as task-intent context. It receives Rook's current Git status and
+diff view, capped at 50 KiB. That view may include pre-existing staged/unstaged
+changes and lists untracked paths without their contents. The reviewer is told
+not to infer task attribution or claim complete coverage when scope is unclear.
+For sensitive or mixed-workspace changes, inspect the supplied scope before
+using the result; do not treat an empty report as proof that every change was
+reviewed or that the patch is correct. Review text and code are handled under
+Rook/Pi's ordinary session-history and provider privacy behavior.
+
+After the simplicity review returns, Rook compares the Git view with the captured
+view and labels the report potentially stale if the workspace changed or could
+not be rechecked. This is a best-effort guard, not task-level change attribution.
+
+The generic `/review` remains available as the comparison/control path.
+
 ## Modes and controls
 
 | Setting                             | Behavior                                                                                                                        |

@@ -2,7 +2,7 @@
 
 ## 1. Status and document ownership
 
-- Status: approved direction; implementation is in progress, beginning with the Rook capability audit and prompt-focused prototype.
+- Status: Rook-only explicit prompt prototype implemented; validation and evaluation are deferred at the user's request.
 - This is the current proposed direction, superseding the earlier evidence-driven reasoning proposal. That proposal is not a parallel implementation backlog.
 - Plan updates belong in this repository. Do not treat conditional phases as approved provider evaluations, release claims, or permission to delete user data.
 
@@ -37,7 +37,7 @@ These are hypotheses, not product claims. Less code does not automatically mean 
 - Rook's `src/pi/execution-policy.ts` already asks for small clear solutions, existing architecture, no speculative abstractions/dependencies, focused tests, and diff inspection.
 - The new product must outperform this existing guidance and a concise additional review instruction. Repackaging those sentences is not sufficient justification for a subsystem.
 - **Rook audit (2026-11-20):** `/review` already starts a separate, read-only Pi session using the selected model. Its prompt checks correctness, regressions, and missing tests, but does not assess necessity/simplification and receives no task intent. It reviews a Git view capped at 50 KiB: status includes untracked paths but their contents are omitted; the diff is against `HEAD` and may include pre-existing user changes. Therefore it cannot claim task attribution or complete coverage. Reuse this explicit entry point and same inference rather than adding an automatic reviewer or agent.
-- **Prototype started (2026-11-20):** PLYTH exports a bounded simplicity-review prompt builder; Rook exposes it as `/review simplicity` alongside the existing `/review` generic control. Both can use the same recent user context, bounded to 6000 characters. This is prompt/integration plumbing only; no provider comparison or effectiveness claim has run.
+- **Prototype implemented (2026-11-21):** PLYTH exports a bounded simplicity-review prompt builder; Rook exposes it as `/review simplicity` alongside the existing `/review` generic control. Both use the same recent user context, bounded to 6000 characters. The Rook adapter rechecks the Git view after a simplicity review and marks findings potentially stale if it changed or could not be rechecked. The prompt requests at most three findings/1000 tokens and warns about attribution/untracked-file limitations. This remains a prompt/integration prototype; no provider comparison or effectiveness claim has run.
 
 Do not revive prediction scoring, hypothesis ledgers, verification sidecars, or broad execution-memory features as prerequisites for this pivot.
 
@@ -325,17 +325,19 @@ Exit: actionable differentiated reviews exist at acceptable cost. Otherwise keep
 
 ### Phase 2 — Minimal explicit Rook integration
 
-**Prototype in progress (2026-11-20):** adds `buildChangeReviewPrompt` to the PLYTH core and an explicit `/review simplicity` focus to Rook's existing read-only reviewer. Existing `/review` remains the generic control; both include the same bounded recent user context. No new provider call is added beyond the explicit review invocation. The current Git view's attribution/untracked-file limitations are disclosed in both prompts. Focused PLYTH/Rook tests and typecheck pass; no live review comparison has run. Freeze offline cases before any separately authorized provider comparison.
+**Prototype implemented; validation deferred (2026-11-21):** `buildChangeReviewPrompt` in PLYTH and `/review simplicity` in Rook reuse Rook's existing explicit read-only review call. The generic `/review` remains the control. Both use recent user context; the simplicity flow marks results stale if Git state changes during review. Prompts disclose pre-existing/untracked scope limits. No automatic review, edit, or test execution was added. The user requested that tests and benchmarks happen later, so the newest integration changes have not been revalidated and no live review comparison has run.
 
-- Implement only the bounded review contract and supported explicit invocation.
-- Reuse existing repository inspection and provider handling.
-- Add strict scope/revision validation, off behavior, limits, and clear incomplete-review reporting.
+- Implement only the bounded prompt contract and supported explicit invocation.
+- Reuse existing repository inspection and provider handling; do not add file crawling or a second model.
+- Bound task context and prompt diff size; disclose missing task/scope evidence and recheck Git state before returning findings.
 - Keep legacy prediction behavior separate and unchanged; do not combine both experiments during evaluation.
 - Test the vertical slice using mock events before any provider run.
 
-Exit: explicit review returns grounded, scoped findings or honest abstention without automatic mutation or extra hidden calls.
+Exit: explicit review returns grounded findings or honest scope/staleness limitations without automatic mutation or hidden review calls. Full changed-file attribution and untracked-file content review remain unsupported; disclose this rather than claiming complete coverage.
 
-### Phase 3 — Frozen end-to-end pilot
+### Phase 3 — Frozen end-to-end pilot (deferred)
+
+Deferred at the user's request. Do not run tests, live reviews, benchmarks, or provider comparisons until the user asks to resume validation/evaluation.
 
 - Approve/freeze the three-condition pilot and budget.
 - Retain submitted patches, independent checks, blinded human assessments, usage, and failures.
@@ -353,6 +355,8 @@ Exit: added orchestration earns its cost and does not harm necessary complexity 
 
 ### Phase 5 — Minimal productization and future portability
 
+Prototype-facing documentation has been updated in PLYTH README and Rook integration docs. This is not a release or portability claim.
+
 - Document supported review categories, limits, cost, privacy, and disable controls.
 - Update README positioning without pretending proposed capabilities already ship.
 - Propose a versioned legacy API/flag deprecation only after a deliberate migration decision. Do not remove existing user data or behavior implicitly.
@@ -363,7 +367,7 @@ Exit: documented Rook support and an honest capability boundary; other-agent sup
 
 ## 14. Proposed concise repository status.md
 
-Use this as the initial handoff after the documentation-only cleanup, adjusting statements to match what actually completed:
+Use this concise handoff as a model; keep it aligned with actual validation state:
 
 ```markdown
 # Status
@@ -371,27 +375,27 @@ Use this as the initial handoff after the documentation-only cleanup, adjusting 
 ## Direction
 
 - Pivot: lightweight change review that challenges unjustified complexity while preserving required behavior.
-- Full design: [plan.md](plan.md). Documentation only; new review functionality is not implemented.
-- Rook first; other coding-agent adapters are deferred. Do not implement the plan without explicit authorization.
+- Full design and phased decisions: [plan.md](plan.md). `/review simplicity` is an experimental Rook-only prompt integration.
+- Other coding-agent adapters are deferred. No effectiveness claim is supported.
 
 ## Existing implementation and evidence
 
-- Current code is the legacy prediction-feedback core; Rook consumes the sibling package. Existing behavior remains unchanged and advisory feedback stays default-off.
+- Legacy prediction-feedback core remains for Rook compatibility; advisory feedback stays default-off. New simplicity review is explicit and read-only.
 - No demonstrated effectiveness benefit: [bounded study](evals/phase3-final/report.md), [latest live comparison](evals/latest-features-live/report.md).
 - Existing setup/API limitations: [README.md](README.md), [Rook integration](docs/rook.md).
 
 ## Completed
 
-- Added the new plan, removed the obsolete implementation document, and condensed this handoff.
+- Added the plan, removed `implementation.md`, and implemented the bounded prompt/Rook invocation prototype.
 
 ## Next
 
-- If authorized, audit existing Rook quality guidance and test a bounded targeted review against a simple prompt baseline before building orchestration.
-- No new provider runs, code migration, publication, or other-agent integration is authorized by the documentation cleanup.
+- Tests, benchmarks, provider comparisons, and effectiveness evaluation are deferred at the user's request.
+- Preserve legacy behavior; do not add automatic review or other-agent adapters without a new decision.
 
 ## Validation
 
-- Documentation-only checks: record the actual diff/reference checks performed. Historical runtime tests are not current verification.
+- Record tests only after the user asks to resume validation. Do not describe earlier tests as validating later changes.
 ```
 
 Keep this handoff short, ideally under 40 lines. Add current blockers or essential environment notes when relevant; do not grow it into a transcript or duplicate benchmark tables. Detailed historical findings belong in their existing reports and Git history.

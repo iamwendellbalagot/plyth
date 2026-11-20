@@ -18,10 +18,10 @@
 
 ## Active / next
 
-- Rook audit found an existing explicit `/review` path; the PLYTH prompt builder and Rook `/review simplicity` prototype are implemented and focused checks pass.
-- Freeze offline review cases next. No provider runs or inference budget have been approved.
+- Rook audit found an existing explicit `/review` path. PLYTH's bounded prompt builder and Rook `/review simplicity` integration are implemented, including recent task context and post-review stale-state warning.
+- Tests, benchmarks, live reviews, and provider comparisons are deferred at the user's request. No effectiveness claim is supported.
 - Preserve legacy PLYTH APIs and Rook integration until a replacement is explicitly validated and migrated.
 
 ## Validation
 
-- PLYTH: `npm test` (13 tests), build, formatting and diff checks pass. Rook: focused review/TUI tests (44), typecheck, formatting and diff checks pass. No live review comparison was run.
+- Earlier prompt prototype checks passed (PLYTH 13 tests/build; Rook 44 focused tests/typecheck/build). The latest report-bound/stale-state/documentation changes have not been tested, per user direction. No live review comparison was run.

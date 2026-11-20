@@ -1,9 +1,20 @@
-# PLYTH — Rook-first prediction feedback
+# PLYTH — lightweight change review for coding agents
 
-PLYTH is a dependency-free TypeScript core for recording command expectations,
-judging observable outcomes, and offering bounded advisory feedback. It does not
-run commands, change permissions, call models, or establish that an agent's
-reasoning is correct. Rook owns tool execution and local trace-file I/O.
+PLYTH is a standalone, dependency-free TypeScript package for lightweight coding-
+change review. Its current prototype helps an agent question whether added code,
+abstractions, dependencies, tests, and scope are justified—without optimizing for
+line count or recommending removal of necessary safeguards.
+
+PLYTH does not run an agent, call a model, inspect repositories, edit code, execute
+tests, or change permissions. A host adapter supplies task context and a bounded
+change view, then invokes its existing model. Rook is the first and only adapter;
+the explicit `/review simplicity` integration is experimental and has not been
+shown to improve coding outcomes. Other-agent support is future work.
+
+The package still contains the earlier prediction-feedback core used by Rook.
+That behavior is retained for compatibility, remains default-off for advisory
+feedback, and has no demonstrated effectiveness benefit. See the historical
+reports linked below; they do not evaluate the new change-review prototype.
 
 ## Development
 
@@ -19,6 +30,8 @@ not a published multi-agent release. Other-host integrations are deferred.
 
 ## Implemented Rook-first capabilities
 
+- Experimental bounded prompt builder for read-only reviews of whether change
+  complexity is justified, with task-context and diff-size bounds.
 - Versioned bounded event validation, deterministic outcome/evidence judgments,
   and fail-open normalization of unknown results.
 - Coverage/verdict/duration counters and a capped, deduplicated session-feedback gate.
