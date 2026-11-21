@@ -2,7 +2,7 @@
 
 ## Current state
 
-- Explicit Rook MVP development is complete. The eight-task, 24-run R0/R1/R2 live pilot is preregistered and frozen in Rook `evals/phase4-pilot/` at commit `ead887e`; exact model `openai/gpt-6.1-sol`, high thinking, randomized order, synthetic fixtures, scoring, and stop/resource rules are fixed. The 24 inference runs have not started yet.
+- Explicit Rook MVP development is complete. The eight-task, 24-run R0/R1/R2 pilot was frozen in Rook commit `ead887e` with `openai/gpt-6.1-sol`/high thinking, but was halted after one noncompliant cell: an unauthorized file was created and the coding request cap was exceeded. No remaining cell ran; do not resume without a new user decision and preregistration. See Rook `evals/phase4-pilot/STOP_REPORT.md`.
 - PLYTH remains a standalone package; Rook is its first host. Legacy prediction APIs/defaults are preserved. Automatic review, other-agent adapters, legacy removal and publishing are conditional/separate decisions.
 
 ## Completed
@@ -15,9 +15,9 @@
 ## Validation
 
 - 15 PLYTH tests/build; 65 focused Rook tests plus one inference-free pinned-SDK review test; typecheck/build and changed-file formatting/diff checks pass.
-- No live provider calls were made during MVP development or pilot preparation. A no-inference preflight confirmed the frozen model/configuration; immutable starter checks are recorded in Rook `evals/phase4-pilot/freeze.json`.
+- No live provider calls were made during MVP development or pilot preparation. The one pilot inference and its full limitations are recorded in Rook `evals/phase4-pilot/`.
 - No demonstrated benefit: [prior bounded study](evals/phase3-final/report.md), [prior live comparison](evals/latest-features-live/report.md).
 
 ## Next
 
-- Run the frozen pilot in exact order; retain failures and interruptions. Independently score blinded patches before opening Rook `evals/phase4-pilot/scoring-key.jsonl`; then report all 24 cells and limitations. No additional MVP features are prerequisites.
+- No further inference is authorized by the current freeze after its stop rule fired. Any continuation requires a new user decision, corrected/enforced limits, and a new preregistered protocol. No effectiveness result is available.
