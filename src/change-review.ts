@@ -30,8 +30,7 @@ export interface ChangeReviewReport {
 }
 
 export type ChangeReviewValidation =
-  | { ok: true; value: ChangeReviewReport }
-  | { ok: false; reason: string };
+  { ok: true; value: ChangeReviewReport } | { ok: false; reason: string };
 
 const MAX_TASK_CONTEXT_CHARS = 6_000;
 const MAX_CHANGE_CHARS = 50 * 1024;
@@ -72,7 +71,7 @@ export function buildChangeReviewPrompt({
     "Review this patch for unnecessary complexity relative to the requested outcome.",
     "Consider speculative abstractions, dependencies, duplicated capabilities, unrelated changes, and tests without a distinct behavior or failure purpose.",
     "Do not optimize for line count. Preserve correctness, security, compatibility, error handling, cancellation, performance, observability, and meaningful test coverage.",
-    "Return only one JSON object with keys coverage, limitations, findings. coverage must be exactly complete or partial. Each finding must have category (exactly one of necessity, reuse, abstraction, dependency, scope, test-purpose, readability), path (workspace-relative), location, concern, evidence, alternative, and preserve. Use at most three findings and keep the report concise (target 1000 tokens). An empty findings array with complete coverage means no grounded findings; use partial coverage and explain limitations when review is incomplete.",
+    "Return only one JSON object with keys coverage, limitations, findings. coverage must be exactly complete or partial. Each finding must have category (exactly one of necessity, reuse, abstraction, dependency, scope, test-purpose, readability), path (workspace-relative), location, concern, evidence, a concrete simpler alternative, and preserve. Use at most three findings and keep the report concise (target 1000 tokens). An empty findings array with complete coverage means no grounded findings; use partial coverage and explain limitations when review is incomplete.",
     "Do not invent repository capabilities or assume an exhaustive search. If task intent or evidence is insufficient, say so and abstain. Do not recommend deleting tests solely because they pass or look similar.",
     "The supplied Git view may include pre-existing user changes and does not include untracked file contents. Do not attribute all changes to this task or claim a complete review when scope is uncertain; state this limitation.",
     "If selected untracked paths are listed, inspect their contents only with available read-only file tools. If content is unavailable, report partial coverage.",
@@ -228,7 +227,9 @@ function hasOnlyKeys(value: Record<string, unknown>, keys: string[]): boolean {
 }
 
 function boundedText(value: unknown, max: number): string | undefined {
-  return typeof value === "string" && value.trim().length > 0 && value.length <= max
+  return typeof value === "string" &&
+    value.trim().length > 0 &&
+    value.length <= max
     ? value.trim()
     : undefined;
 }

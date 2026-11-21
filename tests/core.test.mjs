@@ -10,6 +10,8 @@ import {
   SessionFeedbackGate,
   SessionCounter,
   buildChangeReviewPrompt,
+  parseChangeReviewReport,
+  formatChangeReviewReport,
 } from "../src/index.ts";
 
 const fixtures = JSON.parse(
@@ -218,4 +220,45 @@ test("change review prompt is bounded and protects justified complexity", () => 
   });
   assert.match(hostile, /&lt;\/task_context&gt;/);
   assert.match(hostile, /&lt;\/untrusted_patch&gt;/);
+});
+
+test("change review reports validate scope and render partial coverage honestly", () => {
+  const report = JSON.stringify({
+    coverage: "partial",
+    limitations: ["Untracked file contents were unavailable."],
+    findings: [
+      {
+        category: "abstraction",
+        path: "src/retry.ts",
+        location: "retryWithPolicy",
+        concern: "The wrapper duplicates the existing retry helper.",
+        evidence: "The project already exports retryWithBackoff.",
+        alternative: "Reuse retryWithBackoff with the existing options.",
+        preserve: "Keep the current backoff and cancellation behavior.",
+      },
+    ],
+  });
+  const parsed = parseChangeReviewReport(report, ["src/retry.ts"]);
+  assert.equal(parsed.ok, true);
+  if (parsed.ok) {
+    const formatted = formatChangeReviewReport(parsed.value);
+    assert.match(formatted, /incomplete/);
+    assert.match(formatted, /retryWithBackoff/);
+    assert.match(formatted, /Untracked file contents were unavailable/);
+  }
+  assert.deepEqual(parseChangeReviewReport(report, ["src/other.ts"]), {
+    ok: false,
+    reason: "finding_outside_review_scope",
+  });
+  assert.equal(parseChangeReviewReport("not json").ok, false);
+  assert.equal(
+    parseChangeReviewReport(
+      JSON.stringify({
+        coverage: "complete",
+        limitations: ["unknown"],
+        findings: [],
+      }),
+    ).ok,
+    false,
+  );
 });

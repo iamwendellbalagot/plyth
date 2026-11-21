@@ -14,7 +14,8 @@
 
 ## Validation and evidence
 
-- Tests, builds, benchmarks, live reviews, and provider comparisons are deferred at the user's request. The latest changes are untested; do not claim effectiveness.
+- Latest focused validation passes: 14 tests, TypeScript build, Prettier, and `git diff --check`.
+- Benchmarks, live reviews, and provider comparisons remain deferred; do not claim effectiveness.
 - Prior evidence remains inconclusive: [bounded study](evals/phase3-final/report.md) and [latest live comparison](evals/latest-features-live/report.md).
 
 ## Next
