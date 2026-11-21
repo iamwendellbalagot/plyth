@@ -27,8 +27,8 @@ export async function main(args = process.argv.slice(2), dependencies = {}) {
 
   const options = parseArguments(args);
   const project = await realpath(options.project);
-  const rookPackage = await readJson(join(project, "package.json"));
-  assertSupportedRook(rookPackage, project);
+  const workspacePackage = await readJson(join(project, "package.json"));
+  await assertCompatibleRookIfInstalled(workspacePackage, project);
 
   if (options.command === "status") {
     const config = await readPlythConfig(project);
@@ -45,8 +45,16 @@ export async function main(args = process.argv.slice(2), dependencies = {}) {
 
   if (options.command === "uninstall") {
     await writePlythConfig(project, "off");
+    if (dependencies.uninstallPackage) {
+      await dependencies.uninstallPackage(project);
+    } else {
+      execFileSync("npm", ["uninstall", "--save", "plyth"], {
+        cwd: project,
+        stdio: "inherit",
+      });
+    }
     process.stdout.write(
-      "PLYTH integration disabled for this Rook project. The package remains installed because Rook uses the PLYTH core.\n",
+      "PLYTH integration disabled and the workspace dependency removed. Restart Rook if it is running.\n",
     );
     return 0;
   }
@@ -75,10 +83,10 @@ export async function main(args = process.argv.slice(2), dependencies = {}) {
 
   await writePlythConfig(project, mode);
   process.stdout.write(
-    `PLYTH ${mode} mode enabled for Rook at ${project}.\n` +
+    `PLYTH ${mode} mode configured for Rook in ${project}.\n` +
       (mode === "integrated"
         ? "Integrated feedback is experimental and has no demonstrated benefit; disable it with `npx plyth uninstall rook --project .` or set ROOK_PLYTH_INTEGRATED=off.\n"
-        : "Dynamic feedback remains off unless you opt in with `--mode prompt` or `--mode integrated`.\n"),
+        : "Dynamic feedback remains off unless you opt in with `--mode prompt` or `--mode integrated`. Restart Rook to apply changes.\n"),
   );
   return 0;
 }
@@ -124,6 +132,7 @@ async function readPlythConfig(project) {
       typeof config !== "object" ||
       Array.isArray(config) ||
       config.schemaVersion !== 1 ||
+      config.integrationVersion !== 1 ||
       !isMode(config.mode)
     )
       throw new Error(".rook/plyth.json has an unsupported or invalid format.");
@@ -150,7 +159,7 @@ async function writePlythConfig(project, mode) {
   const file = await open(temporary, "wx", 0o600);
   try {
     await file.writeFile(
-      `${JSON.stringify({ schemaVersion: 1, mode }, null, 2)}\n`,
+      `${JSON.stringify({ schemaVersion: 1, integrationVersion: 1, mode }, null, 2)}\n`,
       "utf8",
     );
     await file.close();
@@ -182,15 +191,20 @@ function isCompatiblePlyth(pkg) {
   return major === 0 && minor === 1;
 }
 
-function assertSupportedRook(pkg, project) {
-  if (!pkg || pkg.name !== "rook")
-    throw new Error(`No Rook package.json found at ${project}.`);
-  const [major, minor] = String(pkg.version ?? "")
-    .split(".")
-    .map(Number);
-  if (major !== 0 || minor !== 1)
+async function assertCompatibleRookIfInstalled(workspacePackage, project) {
+  if (workspacePackage.name === "rook") {
+    if (workspacePackage.rookCapabilities?.plythIntegration !== 1)
+      throw new Error(
+        `Rook at ${project} does not declare PLYTH integration capability 1.`,
+      );
+    return;
+  }
+  const localRook = await readOptionalJson(
+    join(project, "node_modules", "rook", "package.json"),
+  );
+  if (localRook && localRook.rookCapabilities?.plythIntegration !== 1)
     throw new Error(
-      `PLYTH currently supports Rook 0.1.x; found ${pkg.version ?? "unknown"}.`,
+      `Installed Rook ${localRook.version ?? "unknown"} does not declare PLYTH integration capability 1.`,
     );
 }
 
@@ -219,6 +233,15 @@ function isMissing(error) {
 
 async function readJson(path) {
   return JSON.parse(await readFile(path, "utf8"));
+}
+
+async function readOptionalJson(path) {
+  try {
+    return await readJson(path);
+  } catch (error) {
+    if (isMissing(error)) return undefined;
+    throw error;
+  }
 }
 
 function printUsage() {

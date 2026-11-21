@@ -5,11 +5,11 @@ import { join } from "node:path";
 import test from "node:test";
 import { main, parseArguments } from "../bin/plyth.mjs";
 
-async function rookProject() {
+async function projectDirectory() {
   const root = await mkdtemp(join(tmpdir(), "plyth-cli-"));
   await writeFile(
     join(root, "package.json"),
-    JSON.stringify({ name: "rook", version: "0.1.0" }),
+    JSON.stringify({ name: "sample-project", version: "1.0.0" }),
   );
   return root;
 }
@@ -52,8 +52,8 @@ test("parses supported commands, modes, and local package sources", () => {
   );
 });
 
-test("installs default-off, supports opt-in modes, reports status, and disables without removing core", async () => {
-  const root = await rookProject();
+test("installs in a workspace, reports status, and removes the dependency on uninstall", async () => {
+  const root = await projectDirectory();
   try {
     const installedSources = [];
     const dependencies = {
@@ -73,41 +73,49 @@ test("installs default-off, supports opt-in modes, reports status, and disables 
     assert.deepEqual(installedSources, ["./plyth.tgz"]);
     assert.deepEqual(
       JSON.parse(await readFile(join(root, ".rook", "plyth.json"), "utf8")),
-      { schemaVersion: 1, mode: "off" },
+      { schemaVersion: 1, integrationVersion: 1, mode: "off" },
     );
 
     await main(["install", "rook", "--project", root, "--mode", "integrated"]);
     assert.deepEqual(installedSources, ["./plyth.tgz"]);
     assert.deepEqual(
       JSON.parse(await readFile(join(root, ".rook", "plyth.json"), "utf8")),
-      { schemaVersion: 1, mode: "integrated" },
+      { schemaVersion: 1, integrationVersion: 1, mode: "integrated" },
     );
 
     assert.equal(await main(["status", "rook", "--project", root]), 0);
-    assert.equal(await main(["uninstall", "rook", "--project", root]), 0);
+    let uninstallCalls = 0;
+    assert.equal(
+      await main(["uninstall", "rook", "--project", root], {
+        uninstallPackage: async (project) => {
+          uninstallCalls++;
+          await rm(join(project, "node_modules", "plyth"), {
+            recursive: true,
+            force: true,
+          });
+        },
+      }),
+      0,
+    );
+    assert.equal(uninstallCalls, 1);
     assert.deepEqual(
       JSON.parse(await readFile(join(root, ".rook", "plyth.json"), "utf8")),
-      { schemaVersion: 1, mode: "off" },
+      { schemaVersion: 1, integrationVersion: 1, mode: "off" },
     );
-    assert.equal(
-      JSON.parse(
-        await readFile(
-          join(root, "node_modules", "plyth", "package.json"),
-          "utf8",
-        ),
-      ).name,
-      "plyth",
+    await assert.rejects(
+      readFile(join(root, "node_modules", "plyth", "package.json")),
     );
   } finally {
     await rm(root, { recursive: true, force: true });
   }
 });
 
-test("rejects unsupported Rook versions before installing", async () => {
-  const root = await rookProject();
+test("rejects a local Rook install without the declared PLYTH capability", async () => {
+  const root = await projectDirectory();
   try {
+    await mkdir(join(root, "node_modules", "rook"), { recursive: true });
     await writeFile(
-      join(root, "package.json"),
+      join(root, "node_modules", "rook", "package.json"),
       JSON.stringify({ name: "rook", version: "1.0.0" }),
     );
     let attemptedInstall = false;
@@ -117,7 +125,7 @@ test("rejects unsupported Rook versions before installing", async () => {
           attemptedInstall = true;
         },
       }),
-      /supports Rook 0.1.x/,
+      /does not declare PLYTH integration capability 1/,
     );
     assert.equal(attemptedInstall, false);
   } finally {
