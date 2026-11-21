@@ -18,7 +18,8 @@ reports linked below; they do not evaluate the new change-review prototype.
 
 ## Install PLYTH in Rook
 
-Install PLYTH from npm in any Node workspace you use with Rook:
+After PLYTH is available from npm, install it in any Node workspace you use
+with Rook:
 
 ```sh
 npx plyth install rook --project .
