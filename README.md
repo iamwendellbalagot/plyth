@@ -16,6 +16,41 @@ That behavior is retained for compatibility, remains default-off for advisory
 feedback, and has no demonstrated effectiveness benefit. See the historical
 reports linked below; they do not evaluate the new change-review prototype.
 
+## Install PLYTH in Rook
+
+PLYTH is not published to npm yet. Once published, install the experimental
+Rook integration from a Rook project with:
+
+```sh
+npx plyth install rook --project .
+```
+
+This installs the PLYTH core dependency and writes `.rook/plyth.json` with mode
+`off`. Enable static guidance with `--mode prompt`, or explicitly opt into
+experimental dynamic mode with `--mode integrated`. Dynamic mode has no
+demonstrated coding benefit and remains off by default.
+Inspect or disable the integration with:
+
+```sh
+npx plyth status rook --project .
+npx plyth uninstall rook --project .
+```
+
+Uninstall disables the integration but intentionally keeps the package installed:
+Rook imports PLYTH for core functionality. An explicit `ROOK_PLYTH_INTEGRATED`
+environment setting overrides the project's `.rook/plyth.json` mode.
+
+For local testing before publication, pack PLYTH and use the tarball as the CLI
+source (replace the path with its absolute path):
+
+```sh
+npm pack --pack-destination /path/to/artifacts
+npm exec --yes --package=/path/to/artifacts/plyth-0.1.0.tgz -- plyth install rook --project /path/to/rook --source /path/to/artifacts/plyth-0.1.0.tgz
+```
+
+The installer currently supports Rook 0.1.x only. It does not patch Rook source
+or alter its permissions. Other coding-agent adapters are future work.
+
 ## Development
 
 ```sh
@@ -24,9 +59,10 @@ npm test
 npm run build
 ```
 
-Clone `plyth` and `rook` beside one another. Build Plyth before installing/building
-Rook; Rook currently consumes `file:../plyth`. These are local development packages,
-not a published multi-agent release. Other-host integrations are deferred.
+For local Rook development, clone `plyth` and `rook` beside one another. Rook
+currently consumes `file:../plyth`; that sibling dependency is for development,
+not a published release. Do not publish until the Rook package dependency is
+switched to a released PLYTH version.
 
 ## Implemented Rook-first capabilities
 

@@ -2,9 +2,13 @@
   "name": "plyth",
   "version": "0.1.0",
   "type": "module",
+  "bin": {
+    "plyth": "./bin/plyth.mjs"
+  },
   "files": [
     "dist",
-    "docs"
+    "docs",
+    "bin/plyth.mjs"
   ],
   "exports": {
     ".": {
