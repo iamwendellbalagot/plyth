@@ -6,6 +6,7 @@ import {
   lstat,
   mkdir,
   open,
+  readdir,
   readFile,
   realpath,
   rename,
@@ -192,20 +193,37 @@ function isCompatiblePlyth(pkg) {
 }
 
 async function assertCompatibleRookIfInstalled(workspacePackage, project) {
-  if (workspacePackage.name === "rook") {
+  if (
+    workspacePackage.name === "rook" ||
+    (typeof workspacePackage.name === "string" &&
+      workspacePackage.name.endsWith("/rook"))
+  ) {
     if (workspacePackage.rookCapabilities?.plythIntegration !== 1)
       throw new Error(
         `Rook at ${project} does not declare PLYTH integration capability 1.`,
       );
     return;
   }
-  const localRook = await readOptionalJson(
-    join(project, "node_modules", "rook", "package.json"),
-  );
-  if (localRook && localRook.rookCapabilities?.plythIntegration !== 1)
-    throw new Error(
-      `Installed Rook ${localRook.version ?? "unknown"} does not declare PLYTH integration capability 1.`,
-    );
+  const nodeModules = join(project, "node_modules");
+  const candidates = [join(nodeModules, "rook", "package.json")];
+  try {
+    const entries = await readdir(nodeModules, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory() && entry.name.startsWith("@"))
+        candidates.push(join(nodeModules, entry.name, "rook", "package.json"));
+    }
+  } catch (error) {
+    if (!isMissing(error)) throw error;
+  }
+  for (const path of candidates) {
+    const localRook = await readOptionalJson(path);
+    if (localRook?.name === "rook" || localRook?.name?.endsWith("/rook")) {
+      if (localRook.rookCapabilities?.plythIntegration !== 1)
+        throw new Error(
+          `Installed Rook ${localRook.version ?? "unknown"} does not declare PLYTH integration capability 1.`,
+        );
+    }
+  }
 }
 
 function resolveEffectiveMode(configMode, env) {

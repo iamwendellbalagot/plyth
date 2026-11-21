@@ -22,6 +22,7 @@ After PLYTH is available from npm, install it in any Node workspace you use
 with Rook:
 
 ```sh
+npm install @wendell2215/rook
 npx plyth install rook --project .
 ```
 

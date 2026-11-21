@@ -132,3 +132,32 @@ test("rejects a local Rook install without the declared PLYTH capability", async
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("accepts a compatible account-scoped Rook package", async () => {
+  const root = await projectDirectory();
+  try {
+    const scopedRook = join(root, "node_modules", "@wendell2215", "rook");
+    await mkdir(scopedRook, { recursive: true });
+    await writeFile(
+      join(scopedRook, "package.json"),
+      JSON.stringify({
+        name: "@wendell2215/rook",
+        version: "0.1.0",
+        rookCapabilities: { plythIntegration: 1 },
+      }),
+    );
+    let attemptedInstall = false;
+    assert.equal(
+      await main(["install", "rook", "--project", root], {
+        installPackage: async () => {
+          attemptedInstall = true;
+          await installStub(root);
+        },
+      }),
+      0,
+    );
+    assert.equal(attemptedInstall, true);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
