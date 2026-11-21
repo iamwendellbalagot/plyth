@@ -15,9 +15,10 @@
 ## Validation and evidence
 
 - Latest focused validation passes: 14 tests, TypeScript build, Prettier, and `git diff --check`.
-- Benchmarks, live reviews, and provider comparisons remain deferred; do not claim effectiveness.
+- One controlled live review comparison was run on the same synthetic retry-helper patch with `openai/gpt-6.1-sol`: simplicity mode returned one evidence-backed abstraction finding; generic review returned no correctness findings. The first simplicity response used a string instead of the required `limitations` array and was rejected, so the prompt was clarified before the successful repeat. That repeat reported 2,831 input / 422 output / 12,800 cache-read tokens (not a billed-cost estimate). This is a single illustrative patch, not evidence of review effectiveness. Live cancellation/stale-state behavior was not exercised.
+- Benchmarks and broader provider comparisons remain deferred; do not claim effectiveness.
 - Prior evidence remains inconclusive: [bounded study](evals/phase3-final/report.md) and [latest live comparison](evals/latest-features-live/report.md).
 
 ## Next
 
-- Run focused tests/typecheck/build only when authorized. Then consider controlled comparison before making any benefit claim.
+- If further evidence is requested, compare more varied patches and models; keep claims limited to the small observed sample.
