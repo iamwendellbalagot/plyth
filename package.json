@@ -1,9 +1,25 @@
 {
   "name": "plyth",
   "version": "0.1.0",
+  "description": "Local-first outcome tracking and experimental feedback for coding agents.",
+  "license": "MIT",
+  "author": "Wendell Balagot",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iamwendellbalagot/plyth.git"
+  },
+  "homepage": "https://github.com/iamwendellbalagot/plyth#readme",
+  "bugs": {
+    "url": "https://github.com/iamwendellbalagot/plyth/issues"
+  },
+  "keywords": [
+    "coding-agents",
+    "developer-tools",
+    "local-first"
+  ],
   "type": "module",
   "bin": {
-    "plyth": "./bin/plyth.mjs"
+    "plyth": "bin/plyth.mjs"
   },
   "files": [
     "dist",

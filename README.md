@@ -18,8 +18,7 @@ reports linked below; they do not evaluate the new change-review prototype.
 
 ## Install PLYTH in Rook
 
-PLYTH is not published to npm yet. Once published, install it from any Node
-workspace you use with Rook:
+Install PLYTH from npm in any Node workspace you use with Rook:
 
 ```sh
 npx plyth install rook --project .
@@ -40,8 +39,8 @@ Uninstall disables the integration and removes PLYTH from the workspace; Rook
 continues to work without it. An explicit `ROOK_PLYTH_INTEGRATED` environment
 setting overrides the project's `.rook/plyth.json` mode.
 
-For local testing before publication, pack PLYTH and use the tarball as the CLI
-source (replace the path with its absolute path):
+For local testing, pack PLYTH and use the tarball as the CLI source (replace the
+path with its absolute path):
 
 ```sh
 npm pack --pack-destination /path/to/artifacts
@@ -61,9 +60,9 @@ npm run build
 ```
 
 For local Rook development, clone `plyth` and `rook` beside one another. Rook
-uses `file:../plyth` only as a development dependency; its published package
-declares PLYTH as an optional peer. Do not publish Rook until PLYTH is released
-and the packed Rook artifact has been verified without the sibling checkout.
+uses `file:../plyth` only as a development dependency; its package declares
+PLYTH as an optional peer. The unscoped npm name `rook` belongs to an unrelated
+existing package, so use a distinct name before distributing Rook through npm.
 
 ## Implemented Rook-first capabilities
 
