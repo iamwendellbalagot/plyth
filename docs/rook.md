@@ -47,18 +47,21 @@ are model-authored references, not verified semantic anchors or automatic edit
 targets. Host limitations cannot be overridden by a model claiming complete
 coverage. Invalid output is never interpreted as a clean review.
 
-The enforced added-text budget is **6000 UTF-8 byte units**, including the
+The enforced added-text budget is **32,000 UTF-8 byte units**, including the
 escaped prompt, scope metadata, guidance and supplementary tool results. One
 byte per unit conservatively bounds text tokens for byte-based tokenizers;
 this is not a model-specific tokenizer or billed token count. Existing Pi system
 messages/tool schemas, repeated input across tool turns and model-generated
-text are not included: total provider input can be larger. At most two
-`read`/`rook_search` executions are allowed; all other tools (including MCP) are
-blocked in the simplicity session. Oversized supplementary results are omitted
-and force partial coverage. Pi's stream options cap each review response at
-1000 output tokens; the 16 KiB report parser bound is an additional local
-safeguard. Provider reasoning/retries/tool turns can add usage; this is not a
-total-call billing cap. These limits still need live pilot assessment.
+text are not included: total provider input can be larger. At most four
+`read`/`rook_search` executions and four provider requests are allowed; all
+other tools (including MCP) are blocked in the simplicity session. Oversized
+supplementary results are omitted and force partial coverage. Pi's stream
+options cap each review response at 8000 output tokens; the 16 KiB report
+parser bound is an additional local safeguard. Explicit metrics callbacks can
+inspect run diagnostics, including raw response text, stop reasons, tool names
+and errors; callers must handle response text as potentially sensitive.
+Provider reasoning and repeated input add usage; request ceilings are not a
+billing cap. These limits are under live assessment.
 
 Rook allows at most 20 selected paths and 120 seconds for the review. It displays
 actual input/output/cache token counts from Pi when available; this is not a

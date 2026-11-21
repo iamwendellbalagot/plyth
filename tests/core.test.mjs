@@ -280,7 +280,7 @@ test("versioned review binds host provenance and enforces a conservative text bu
   };
   const prompt = buildScopedChangeReviewPrompt(request);
   assert.match(prompt, /captured_scope/);
-  assert.ok(reviewContextUnits(prompt) <= 6_000);
+  assert.ok(reviewContextUnits(prompt) <= 32_000);
   assert.equal(reviewContextUnits("界"), 3);
   assert.throws(
     () => buildScopedChangeReviewPrompt({ ...request, version: 2 }),
@@ -290,7 +290,7 @@ test("versioned review binds host provenance and enforces a conservative text bu
     () =>
       buildScopedChangeReviewPrompt({
         ...request,
-        changes: "界".repeat(3_000),
+        changes: "界".repeat(12_000),
       }),
     RangeError,
   );
