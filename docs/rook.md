@@ -13,28 +13,52 @@ Optionally scope a review to changed repository-relative files with repeated
 `--file` options, for example `/review simplicity --file src/retry.ts --file tests/retry.test.ts`.
 At most 20 paths are accepted. Paths containing spaces are not supported by
 this command syntax. The selected paths must be safe paths that are currently
-changed; unsafe paths, unchanged paths, and paths outside the repository are
-rejected. Without `--file`, the existing bounded whole-workspace Git view is
-used.
+changed; unsafe paths, unchanged paths, and paths outside the current workspace are
+rejected. Without `--file`, simplicity review uses an in-memory task-start Git
+boundary: files already dirty at task start are excluded, even if later edited.
+Select such mixed files explicitly to review them as attribution-unknown. New
+dirty paths are labelled **task-window**, not proven agent authorship. Generated
+`dist`, `build`, `vendor`, `coverage`, and `generated` directories are excluded
+from default scope but can be selected explicitly. Without a usable task boundary
+(for example after resume/compaction, or a changed HEAD), attribution is unknown
+and the host forces partial coverage. A Git repository with a HEAD is required.
 
 This is an explicit user-invoked review, not automatic coaching. It uses Rook's
 existing read-only review call and permission/tool boundaries; it does not edit
-files or execute tests. The invocation makes one separate request to the selected
-model, so it uses additional provider tokens. It is not a free deterministic
-check. No comparative review evaluation has been run, and effectiveness is
-unproven.
+files or execute tests. The invocation starts one separate review session using
+the selected model; supplementary tools can require further provider turns, so
+it uses additional tokens. It is not a free deterministic check. Earlier small
+synthetic workflow probes are not an end-to-end effectiveness evaluation.
 
-The prompt includes up to the latest three user messages (at most 6000
-characters) as task-intent context. It receives Rook's current Git status and
-diff view, capped at 50 KiB. That view may include pre-existing staged/unstaged
-changes and lists untracked paths without their contents; the reviewer may read
-selected untracked files only through Rook's safe read-only tools. The reviewer
-is told not to infer task attribution or claim complete coverage when scope is
-unclear. Findings must be valid JSON, limited to three, point only to selected
-paths when provided, and include observed evidence, a concrete alternative, and
-what must be preserved. Invalid or oversized output is reported as an invalid
-review, never as “no findings.” The output is limited to 16 KiB; this protects
-handling but does not cap provider generation tokens.
+The prompt uses the current task request (up to 6000 characters; recent user
+messages are a fallback), scoped staged/unstaged diffs, safe untracked contents,
+and applicable repository guidance through Rook's existing instruction loader.
+Symlinks, hard links, special/binary files and files over 128 KiB are rejected;
+capture is best-effort against concurrent changes, not an OS sandbox. Oversized
+diffs/task context are rejected before inference rather than silently truncated;
+optional project guidance that cannot fit is omitted with forced partial coverage.
+
+The portable `ChangeReviewRequest` / `ChangeReviewResult` contracts are version 1.
+Hosts capture allowed paths, a SHA-256 content revision, attribution and
+limitations; models supply only findings, coverage and limitations. Findings
+must be valid JSON, limited to three, point only to scoped paths, and include
+evidence, a concrete alternative, and what must be preserved. Symbol/line labels
+are model-authored references, not verified semantic anchors or automatic edit
+targets. Host limitations cannot be overridden by a model claiming complete
+coverage. Invalid output is never interpreted as a clean review.
+
+The enforced added-text budget is **6000 UTF-8 byte units**, including the
+escaped prompt, scope metadata, guidance and supplementary tool results. One
+byte per unit conservatively bounds text tokens for byte-based tokenizers;
+this is not a model-specific tokenizer or billed token count. Existing Pi system
+messages/tool schemas, repeated input across tool turns and model-generated
+text are not included: total provider input can be larger. At most two
+`read`/`rook_search` executions are allowed; all other tools (including MCP) are
+blocked in the simplicity session. Oversized supplementary results are omitted
+and force partial coverage. Pi's stream options cap each review response at
+1000 output tokens; the 16 KiB report parser bound is an additional local
+safeguard. Provider reasoning/retries/tool turns can add usage; this is not a
+total-call billing cap. These limits still need live pilot assessment.
 
 Rook allows at most 20 selected paths and 120 seconds for the review. It displays
 actual input/output/cache token counts from Pi when available; this is not a
@@ -42,9 +66,14 @@ provider-billed dollar estimate. Cancelling `/cancel` aborts the temporary revie
 session and removes it after cleanup. Review text and code are handled under
 Rook/Pi's ordinary session-history and provider privacy behavior.
 
-After the simplicity review returns, Rook compares the Git view with the captured
-view and labels the report potentially stale if the workspace changed or could
-not be rechecked. This is a best-effort guard, not task-level change attribution.
+After review, Rook rechecks the selected files' content revision, including
+untracked content, and uses its existing bounded workspace snapshot for
+supporting-context freshness. Changed or unverifiable state is disclosed as
+stale/partial, not as current complete coverage. New requirements, steering,
+new/resumed/forked/compacted sessions or disposal abort pending review delivery;
+late findings are discarded. Task boundaries/results are not persisted or
+silently reused on resume. The legacy prediction experiment is not enabled in
+the simplicity reviewer.
 
 The generic `/review` remains available as the comparison/control path.
 

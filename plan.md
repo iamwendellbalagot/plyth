@@ -2,7 +2,7 @@
 
 ## 1. Status and document ownership
 
-- Status: Rook-only explicit prompt prototype implemented; validation and evaluation are deferred at the user's request.
+- Status: explicit Rook MVP development complete; focused implementation checks pass. The frozen live end-to-end pilot is next, not yet run. Prior small live workflow probes do not establish effectiveness.
 - This is the current proposed direction, superseding the earlier evidence-driven reasoning proposal. That proposal is not a parallel implementation backlog.
 - Plan updates belong in this repository. Do not treat conditional phases as approved provider evaluations, release claims, or permission to delete user data.
 
@@ -37,7 +37,18 @@ These are hypotheses, not product claims. Less code does not automatically mean 
 - Rook's `src/pi/execution-policy.ts` already asks for small clear solutions, existing architecture, no speculative abstractions/dependencies, focused tests, and diff inspection.
 - The new product must outperform this existing guidance and a concise additional review instruction. Repackaging those sentences is not sufficient justification for a subsystem.
 - **Rook audit (2026-11-20):** `/review` already starts a separate, read-only Pi session using the selected model. Its prompt checks correctness, regressions, and missing tests, but does not assess necessity/simplification and receives no task intent. It reviews a Git view capped at 50 KiB: status includes untracked paths but their contents are omitted; the diff is against `HEAD` and may include pre-existing user changes. Therefore it cannot claim task attribution or complete coverage. Reuse this explicit entry point and same inference rather than adding an automatic reviewer or agent.
-- **Prototype implemented (2026-11-21):** PLYTH exports a bounded simplicity-review prompt builder; Rook exposes it as `/review simplicity` alongside the existing `/review` generic control. Both use the same recent user context, bounded to 6000 characters. The Rook adapter rechecks the Git view after a simplicity review and marks findings potentially stale if it changed or could not be rechecked. The prompt requests at most three findings/1000 tokens and warns about attribution/untracked-file limitations. This remains a prompt/integration prototype; no provider comparison or effectiveness claim has run.
+- **MVP implemented (2026-11-21):** PLYTH exports version-1 scoped review request/result contracts and bounded prompt/report handling. Rook's `/review simplicity` captures task-window scope, supports explicit mixed-file scope with forced attribution-unknown/partial coverage, includes safe untracked contents and project guidance, enforces two supplementary read/search calls and a conservative added-text budget, caps provider response output, reports usage and scope/revision, rechecks freshness, and discards late findings after task/session changes. Generic `/review` remains unchanged. Legacy prediction behavior is preserved in the host and not combined with the simplicity reviewer. No effectiveness claim is supported.
+
+### Delivery progress
+
+| Phase                             | Development state                                                                | Evaluation state                                                              |
+| --------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| 0 — Documentation cleanup         | Complete                                                                         | Not applicable                                                                |
+| 1 — Audit and opportunity         | Rook audit complete                                                              | Frozen 12-case comparison and independent assessment pending                  |
+| 2 — Explicit Rook MVP             | Complete within the disclosed attribution, safety and budget boundaries          | Focused offline checks pass; final revision has no live pilot result          |
+| 3 — Frozen end-to-end pilot       | No additional product code is a prerequisite                                     | Next: agree fixed cases, controls, budgets and human scoring before inference |
+| 4 — Automatic timing/confirmation | Intentionally not implemented; conditional on demonstrated explicit-review value | Deferred                                                                      |
+| 5 — Productization/portability    | MVP docs/standalone contracts complete; release/migration decisions separate     | Other-agent adapters remain separately authorized, conditional work           |
 
 Do not revive prediction scoring, hypothesis ledgers, verification sidecars, or broad execution-memory features as prerequisites for this pivot.
 
@@ -76,7 +87,7 @@ No arbitrary maximum line length, file length, function length, test count, or a
 ### One bounded review pass
 
 1. Capture the current task request and explicit user constraints.
-2. Establish the agent's task-local change scope without absorbing pre-existing user edits.
+2. Capture a task-start dirty-path boundary. Default scope excludes previously dirty files; explicitly selected mixed files or a missing boundary are labelled attribution-unknown and partial. Task-window does not prove authorship or isolate mixed hunks.
 3. Gather the actual diff and the minimum necessary existing code/context.
 4. Review changed code and tests against the requested behavior and project conventions.
 5. Present zero to three substantive findings. Three is a cap, not a quota.
@@ -154,8 +165,8 @@ User task + current task-local diff + bounded supporting context
 
 ### PLYTH responsibilities
 
-- A short reusable review instruction and versioned review input/output contracts.
-- Input/output bounds, validation, location checking, stale-review detection, and optional duplicate suppression.
+- A short reusable review instruction and version-1 review input/output contracts (`ChangeReviewRequest` / `ChangeReviewResult`).
+- Input/output bounds, validation, scoped-path checking, host-bound revision metadata and minimal formatting. Symbol/line labels remain model-authored, not semantically verified edit anchors. Rook owns snapshot/freshness detection. Duplicate suppression is optional and not needed for the explicit MVP.
 - Honest limitation reporting and minimal review-result formatting.
 - No model SDK, network client, shell execution, filesystem crawling, or semantic quality score in the core.
 
@@ -178,7 +189,7 @@ Begin with a prompt-only prototype. Create code only for responsibilities the pi
 
 ### First trigger: explicit review
 
-Start with a user-invoked review flow in Rook, tentatively `/plyth review`; audit pinned Pi SDK command handling before finalizing the interaction. If a dedicated command is unnecessary, use the existing prompt/template mechanism first.
+Implemented as `/review simplicity`, reusing Rook's existing review entry point rather than a separate command or agent subsystem. It accepts repeated `--file repo/path` options (maximum 20).
 
 The initial invocation does not authorize automatically applying all suggestions. Present findings; subsequent edits follow the user's request and normal Rook authorization.
 
@@ -195,10 +206,10 @@ Only add automatic timing after the explicit review demonstrates value and a sup
 
 - No additional provider, independent model, or background inference.
 - Using Rook's existing model still costs tokens and may require an additional model turn; report it honestly.
-- Review instruction target: at most 300 tokens using a documented tokenizer.
-- Additional diff/supporting context target: at most 6,000 tokens; reuse visible context when possible, avoid duplicate diff injection.
-- Review response target: at most 1,000 tokens and three findings; enforce supported output limits when available.
-- At most two targeted supplementary reads/searches in the bounded prototype. If essential context is missing, return a qualified/incomplete review instead of pretending it is complete.
+- Review instruction target: concise, approximately 300 model tokens; exact model-token measurement belongs in the frozen pilot. No model-specific tokenizer dependency was added.
+- Enforced added-text budget: at most **6,000 UTF-8 byte units** for prompt (including escaped task/diff, guidance, scope metadata) plus supplementary tool results. One byte per unit conservatively bounds text tokens for byte-based tokenizers, not arbitrary provider accounting. Existing system/tool schemas, model-authored text, and repeated input across turns are outside this per-context limit and must be included in actual pilot usage measurements.
+- Review response: target at most 1,000 tokens and three findings. Rook sets `maxTokens: 1000` through the pinned SDK's public stream function for each review response; the local parser additionally rejects reports over 16 KiB. This is not a total-session cost ceiling.
+- At most two targeted supplementary `read`/`rook_search` calls, enforced by a review-only tool hook. All other tools (including MCP) are denied. Omitted oversized results or blocked inspection force partial coverage; oversized initial context is rejected before inference, never silently truncated.
 - No content replay on every tool event. Off mode adds no review guidance/tool/schema/context and requests no inference.
 
 These are starting limits, not measured overhead claims or universal model limits. Approve and freeze actual pilot limits before inference. Measure absolute token additions and end-to-end overhead, including prompt-cache effects, follow-up discussion, edits, and verification.
@@ -207,8 +218,8 @@ If a large patch cannot fit, let the user choose a scope or report that the revi
 
 ## 9. Change provenance and lifecycle
 
-- Base review on the task's change boundary, not blindly on all of `git diff HEAD`.
-- Include staged/unstaged and task-created untracked files where safely supported; exclude generated/vendor output unless it is the subject of the task.
+- Base default review on paths that become dirty after the current user task begins; retain only an in-memory HEAD/dirty-path boundary. Actual queued task starts refresh it. Without a usable boundary, disclose attribution-unknown/partial coverage rather than inventing task provenance.
+- Include staged/unstaged and safe untracked contents; default scope excludes dist/build/vendor/coverage/generated directories, with explicit scope available. Require a Git HEAD and reject unsafe, linked, binary/special or over-128-KiB source files. Git/path/content capture and supporting workspace snapshots are bounded and best-effort, not protection against hostile concurrent processes.
 - Preserve pre-existing user changes; mixed hunks may require an explicitly selected scope or an attribution-unknown label.
 - Reference a bounded content revision. Any relevant change after capture makes that review stale; never apply stale line anchors automatically.
 - Read only safe workspace-relative paths through Rook's existing boundaries; no secret-file discovery or symlink escape.
@@ -229,7 +240,7 @@ Keep the first representation small. A finding may contain:
 - `alternative`: a concrete simpler approach.
 - `preserve`: behavior/constraints that must survive simplification.
 
-The result also records reviewed scope, revision, and limitations. It distinguishes a successful review with no findings from a failed/incomplete review. Structural validation can reject malformed fields; it cannot prove the semantic correctness of a finding.
+The version-1 host-bound result records scoped paths, a SHA-256 content revision, attribution and limitations, separate from the model's unversioned JSON findings/coverage payload. Host-known limitations force partial coverage even if the model says complete. It distinguishes a successful review with no findings from a failed/incomplete review. Structural validation checks allowed paths and fields, not semantic correctness or the truth of a symbol/line label.
 
 Do not require a persistent justification ledger. If Rook retains a challenged addition, a short task-local explanation is enough. Acceptance or rejection of a finding does not establish that it was good or bad.
 
@@ -314,7 +325,7 @@ Exit: a single active repository plan, concise factual handoff, obsolete impleme
 
 ### Phase 1 — Prompt and opportunity audit
 
-The Rook capability audit is complete. The offline case set and any provider comparison remain pending; do not incur inference cost without separately agreeing the fixed cases, settings, and budget.
+The Rook capability audit is complete. Small synthetic live workflow probes were run on earlier revisions; they are not the frozen case set or evidence of effectiveness. Freeze the offline cases, settings, budget and independent scoring before the planned comparative evaluation. No more ad hoc provider trials are needed to finish development.
 
 - Review overlap with Rook's current quality guidance and supported review entry points.
 - Freeze the offline cases and generic versus targeted review prompts.
@@ -325,7 +336,7 @@ Exit: actionable differentiated reviews exist at acceptable cost. Otherwise keep
 
 ### Phase 2 — Minimal explicit Rook integration
 
-**Prototype implemented; validation deferred (2026-11-21):** `buildChangeReviewPrompt` in PLYTH and `/review simplicity` in Rook reuse Rook's existing explicit read-only review call. The generic `/review` remains the control. Both use recent user context; the simplicity flow marks results stale if Git state changes during review. Prompts disclose pre-existing/untracked scope limits. No automatic review, edit, or test execution was added. The user requested that tests and benchmarks happen later, so the newest integration changes have not been revalidated and no live review comparison has run.
+**Development complete (2026-11-21):** the explicit Rook vertical slice includes versioned host-bound contracts, task-start scope/default pre-existing exclusions, explicit attribution-unknown scope, safe untracked capture, bounded repository guidance, conservative context limits, enforced two-call inspection, per-response output cap, structured validation, usage/scope/revision presentation, stale rechecks and task/session invalidation. Focused implementation checks are complete. Final-revision live end-to-end pilot testing follows development; no new provider inference was run for these changes.
 
 - Implement only the bounded prompt contract and supported explicit invocation.
 - Reuse existing repository inspection and provider handling; do not add file crawling or a second model.
@@ -333,11 +344,11 @@ Exit: actionable differentiated reviews exist at acceptable cost. Otherwise keep
 - Keep legacy prediction behavior separate and unchanged; do not combine both experiments during evaluation.
 - Test the vertical slice using mock events before any provider run.
 
-Exit: explicit review returns grounded findings or honest scope/staleness limitations without automatic mutation or hidden review calls. Full changed-file attribution and untracked-file content review remain unsupported; disclose this rather than claiming complete coverage.
+Exit achieved for development: explicit review returns validated findings or honest failure/scope/freshness limitations without mutation or hidden invocations. Attribution is deliberately path/window-level: mixed-hunk authorship and semantic anchor verification are not claimed. Conditional automatic timing, a second host, legacy removal, and release publication are not MVP implementation blockers.
 
 ### Phase 3 — Frozen end-to-end pilot (deferred)
 
-Deferred at the user's request. Do not run tests, live reviews, benchmarks, or provider comparisons until the user asks to resume validation/evaluation.
+Next after development handoff. The user requested live end-to-end pilot testing after development, not another sequence of ad hoc workflow probes. Agree/freeze the cases, three conditions, resource limits and independent scoring before inference. The Stage A review cases remain a separate prerequisite to comparative claims.
 
 - Approve/freeze the three-condition pilot and budget.
 - Retain submitted patches, independent checks, blinded human assessments, usage, and failures.
@@ -355,7 +366,7 @@ Exit: added orchestration earns its cost and does not harm necessary complexity 
 
 ### Phase 5 — Minimal productization and future portability
 
-Prototype-facing documentation has been updated in PLYTH README and Rook integration docs. This is not a release or portability claim.
+MVP-facing README, versioned standalone contracts and Rook integration documentation are complete. This is not a published release, legacy-deprecation decision or second-host support claim. Remaining release/migration and adapter work is conditional and separately authorized.
 
 - Document supported review categories, limits, cost, privacy, and disable controls.
 - Update README positioning without pretending proposed capabilities already ship.
@@ -375,7 +386,7 @@ Use this concise handoff as a model; keep it aligned with actual validation stat
 ## Direction
 
 - Pivot: lightweight change review that challenges unjustified complexity while preserving required behavior.
-- Full design and phased decisions: [plan.md](plan.md). `/review simplicity` is an experimental Rook-only prompt integration.
+- Full design and phased decisions: [plan.md](plan.md). Explicit Rook MVP development is complete; frozen live pilot preparation is next.
 - Other coding-agent adapters are deferred. No effectiveness claim is supported.
 
 ## Existing implementation and evidence
@@ -386,16 +397,16 @@ Use this concise handoff as a model; keep it aligned with actual validation stat
 
 ## Completed
 
-- Added the plan, removed `implementation.md`, and implemented the bounded prompt/Rook invocation prototype.
+- Implemented versioned scope/revision contracts, task-window filtering, explicit mixed scope, safe untracked contents, enforced budgets, and task/session invalidation.
 
 ## Next
 
-- Tests, benchmarks, provider comparisons, and effectiveness evaluation are deferred at the user's request.
+- Freeze live pilot cases, comparison prompts, budgets and independent scoring before inference. No additional features are a prerequisite.
 - Preserve legacy behavior; do not add automatic review or other-agent adapters without a new decision.
 
 ## Validation
 
-- Record tests only after the user asks to resume validation. Do not describe earlier tests as validating later changes.
+- Focused offline implementation checks pass. No final-revision live pilot result or effectiveness claim; earlier probes are historical only.
 ```
 
 Keep this handoff short, ideally under 40 lines. Add current blockers or essential environment notes when relevant; do not grow it into a transcript or duplicate benchmark tables. Detailed historical findings belong in their existing reports and Git history.

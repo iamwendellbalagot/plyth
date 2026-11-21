@@ -12,6 +12,9 @@ import {
   buildChangeReviewPrompt,
   parseChangeReviewReport,
   formatChangeReviewReport,
+  buildScopedChangeReviewPrompt,
+  bindChangeReviewResult,
+  reviewContextUnits,
 } from "../src/index.ts";
 
 const fixtures = JSON.parse(
@@ -261,4 +264,59 @@ test("change review reports validate scope and render partial coverage honestly"
     ).ok,
     false,
   );
+});
+
+test("versioned review binds host provenance and enforces a conservative text budget", () => {
+  const request = {
+    version: 1,
+    taskContext: "Preserve cancellation.",
+    changes: "diff payload",
+    scope: {
+      paths: ["src/retry.ts"],
+      revision: "a".repeat(64),
+      attribution: "task-window",
+      limitations: [],
+    },
+  };
+  const prompt = buildScopedChangeReviewPrompt(request);
+  assert.match(prompt, /captured_scope/);
+  assert.ok(reviewContextUnits(prompt) <= 6_000);
+  assert.equal(reviewContextUnits("界"), 3);
+  assert.throws(
+    () => buildScopedChangeReviewPrompt({ ...request, version: 2 }),
+    RangeError,
+  );
+  assert.throws(
+    () =>
+      buildScopedChangeReviewPrompt({
+        ...request,
+        changes: "界".repeat(3_000),
+      }),
+    RangeError,
+  );
+  assert.throws(
+    () =>
+      buildScopedChangeReviewPrompt({
+        ...request,
+        scope: { ...request.scope, paths: ["../secret"] },
+      }),
+    RangeError,
+  );
+  const clean = JSON.stringify({
+    coverage: "complete",
+    limitations: [],
+    findings: [],
+  });
+  const result = bindChangeReviewResult(request, clean, [
+    "Inspection budget exhausted.",
+  ]);
+  assert.equal(result.ok, true);
+  assert.equal(result.value.version, 1);
+  assert.equal(result.value.scope.revision, request.scope.revision);
+  assert.equal(result.value.report.coverage, "partial");
+  const mixed = bindChangeReviewResult(
+    { ...request, scope: { ...request.scope, attribution: "unknown" } },
+    clean,
+  );
+  assert.equal(mixed.value.report.coverage, "partial");
 });

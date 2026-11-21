@@ -32,8 +32,10 @@ not a published multi-agent release. Other-host integrations are deferred.
 
 - Experimental bounded prompt builder for read-only reviews of whether change
   complexity is justified, with task-context, diff-size, finding-schema, and
-  output-size bounds. Hosts still own repository scope, model-call limits and
-  permission enforcement.
+  output-size bounds, plus version-1 scoped request/result contracts. The Rook
+  adapter adds task-window attribution, conservative text budgets, two-read
+  limits, revision checking and lifecycle invalidation. Hosts retain model calls
+  and permission enforcement; see [docs/rook.md](docs/rook.md) for exact limits.
 - Versioned bounded event validation, deterministic outcome/evidence judgments,
   and fail-open normalization of unknown results.
 - Coverage/verdict/duration counters and a capped, deduplicated session-feedback gate.
