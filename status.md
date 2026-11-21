@@ -2,7 +2,7 @@
 
 ## Current state
 
-- Explicit Rook MVP development is complete. [plan.md](plan.md) now records actual phase progress; the frozen live end-to-end pilot is next.
+- Explicit Rook MVP development is complete. The eight-task, 24-run R0/R1/R2 live pilot is preregistered and frozen in Rook `evals/phase4-pilot/` at commit `ead887e`; exact model `openai/gpt-6.1-sol`, high thinking, randomized order, synthetic fixtures, scoring, and stop/resource rules are fixed. The 24 inference runs have not started yet.
 - PLYTH remains a standalone package; Rook is its first host. Legacy prediction APIs/defaults are preserved. Automatic review, other-agent adapters, legacy removal and publishing are conditional/separate decisions.
 
 ## Completed
@@ -15,9 +15,9 @@
 ## Validation
 
 - 15 PLYTH tests/build; 65 focused Rook tests plus one inference-free pinned-SDK review test; typecheck/build and changed-file formatting/diff checks pass.
-- No live provider calls or benchmarks were run for these development changes. Earlier synthetic workflow probes are historical, not final-revision validation or efficacy evidence.
+- No live provider calls were made during MVP development or pilot preparation. A no-inference preflight confirmed the frozen model/configuration; immutable starter checks are recorded in Rook `evals/phase4-pilot/freeze.json`.
 - No demonstrated benefit: [prior bounded study](evals/phase3-final/report.md), [prior live comparison](evals/latest-features-live/report.md).
 
 ## Next
 
-- Freeze live pilot cases, control/targeted prompts, resource limits, run order and independent scoring before inference. No additional MVP features are prerequisites.
+- Run the frozen pilot in exact order; retain failures and interruptions. Independently score blinded patches before opening Rook `evals/phase4-pilot/scoring-key.jsonl`; then report all 24 cells and limitations. No additional MVP features are prerequisites.

@@ -348,7 +348,7 @@ Exit achieved for development: explicit review returns validated findings or hon
 
 ### Phase 3 — Frozen end-to-end pilot (deferred)
 
-Next after development handoff. The user requested live end-to-end pilot testing after development, not another sequence of ad hoc workflow probes. Agree/freeze the cases, three conditions, resource limits and independent scoring before inference. The Stage A review cases remain a separate prerequisite to comparative claims.
+Pilot protocol is preregistered and frozen in Rook `evals/phase4-pilot/` at Rook commit `ead887e` (freeze manifest contains fixture/harness hashes). Exact model: `openai/gpt-6.1-sol`, high thinking. Eight synthetic tasks, R0/R1/R2, randomized 24-cell order, generic-versus-targeted review instructions, scoring, safety rules, token/request/tool/time caps are fixed before inference. No pilot inference has started yet. Run the 24 cells exactly once in order, retain failures/interruptions, score randomized blinded patches before revealing the key, then report exploratory results only. The separate Stage A review-case study remains a prerequisite to broader comparative claims; no additional MVP features are needed.
 
 - Approve/freeze the three-condition pilot and budget.
 - Retain submitted patches, independent checks, blinded human assessments, usage, and failures.
