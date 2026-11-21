@@ -409,3 +409,30 @@ test("integrated recovery notes changed-revision failures and stops at two per t
   flow.beginTask("task-b", "New task", "d".repeat(64));
   assert.equal(flow.observeCommandResult(otherCommand), undefined);
 });
+
+test("integrated flow labels earlier passing checks stale after later source edits", () => {
+  const flow = new IntegratedPlythFlow();
+  const taskId = "task-a";
+  const firstRevision = "a".repeat(64);
+  flow.beginTask(taskId, "Fix the parser", firstRevision);
+  flow.observeWorkspace(taskId, "b".repeat(64), ["src/parser.mjs"]);
+  const checkpoint = flow.takeChangeCheckpoint(taskId);
+  assert.equal(checkpoint.kind, "change-checkpoint");
+
+  const verifiedRevision = "b".repeat(64);
+  flow.observeCommandResult({
+    taskId,
+    commandKey: "1".repeat(64),
+    commandClass: "test",
+    outcome: "pass",
+    fingerprint: "2".repeat(64),
+    revision: verifiedRevision,
+    evidenceLabels: ["parser tests pass"],
+  });
+  flow.observeWorkspace(taskId, "c".repeat(64), ["src/parser.mjs"]);
+  const freshness = flow.takeVerificationFreshness(taskId);
+  assert.equal(freshness.kind, "verification-stale");
+  assert.match(freshness.text, /passing test check/);
+  assert.match(freshness.text, /stale evidence/);
+  assert.equal(flow.takeVerificationFreshness(taskId), undefined);
+});
