@@ -1,4 +1,9 @@
 export type PredictionOutcome = "pass" | "fail" | "error";
+export {
+  IntegratedPlythFlow,
+  type IntegratedCommandClass,
+  type IntegratedContextBlock,
+} from "./inference-flow.ts";
 export type CommandClass = "test" | "build" | "diagnostic" | "other";
 export type Verdict = "hit" | "miss" | "vague" | "none" | "unscorable";
 

@@ -2,6 +2,8 @@
 
 ## Current state
 
+- **Rook integrated inference-loop prototype implemented offline (2026-11-21).** Added exported `IntegratedPlythFlow` with task-local changed-file checkpoints and deduplicated repeated-failure signals under UTF-8/task budgets. Rook's opt-in `ROOK_PLYTH_INTEGRATED=integrated|prompt` path uses Pi's existing context/tool-result hooks; it does not add a reviewer/provider call. Validation: PLYTH build and 18 tests; Rook typecheck/build and 37 focused extension/lifecycle/pinned-SDK tests. Provider-backed interaction and effectiveness are explicitly deferred; no positive efficacy claim is made. See Rook README and `docs/rook.md`.
+
 - **Rook-hosted simplicity review finish evaluation: NO-GO for expansion (2026-11-21).** Eight paired synthetic cases on `openai/gpt-6.1-sol`: PLYTH 3/4 useful simplification catches and two invalid/empty reports; generic review 4/4 catches and 8/8 usable reports. Neither condition made a harmful recommendation, but PLYTH used 22 requests versus 8 and higher observed tokens/time. Frozen go threshold failed. Keep only as an explicit experimental Rook feature if desired; no adapters, automation, efficacy claim, or further tuning round. Full results and caveats in Rook `evals/simplicity-finish/REPORT.md`; exact attempts are retained in `runs/RESULTS.jsonl`. Stopped phase4 pilot artifacts were not touched.
 - Explicit Rook MVP development is complete. The eight-task, 24-run R0/R1/R2 pilot was frozen in Rook commit `ead887e` with `openai/gpt-6.1-sol`/high thinking, but was halted after one noncompliant cell: an unauthorized file was created and the coding request cap was exceeded. No remaining cell ran; do not resume without a new user decision and preregistration. See Rook `evals/phase4-pilot/STOP_REPORT.md`.
 - PLYTH remains a standalone package; Rook is its first host. Legacy prediction APIs/defaults are preserved. Automatic review, other-agent adapters, legacy removal and publishing are conditional/separate decisions.
@@ -21,4 +23,4 @@
 
 ## Next
 
-- No further inference is authorized by the current freeze after its stop rule fired. Any continuation requires a new user decision, corrected/enforced limits, and a new preregistered protocol. No effectiveness result is available.
+- Provider-backed interaction/effectiveness work is not included and requires a separate user request. Preserve the stopped pilot artifacts and all existing user-owned untracked Rook files.

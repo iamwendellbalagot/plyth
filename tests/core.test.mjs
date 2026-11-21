@@ -15,6 +15,7 @@ import {
   buildScopedChangeReviewPrompt,
   bindChangeReviewResult,
   reviewContextUnits,
+  IntegratedPlythFlow,
 } from "../src/index.ts";
 
 const fixtures = JSON.parse(
@@ -319,4 +320,92 @@ test("versioned review binds host provenance and enforces a conservative text bu
     clean,
   );
   assert.equal(mixed.value.report.coverage, "partial");
+});
+
+test("integrated flow emits one bounded checkpoint only for changed task-local files", () => {
+  const flow = new IntegratedPlythFlow();
+  const taskId = "task-a";
+  const initial = "a".repeat(64);
+  flow.beginTask(taskId, "Preserve <safe> behavior", initial);
+  flow.observeWorkspace(taskId, initial, ["src/main.ts"]);
+  assert.equal(flow.takeChangeCheckpoint(taskId), undefined);
+  flow.observeWorkspace(taskId, "b".repeat(64), ["src/main.ts", "../secret"]);
+  const block = flow.takeChangeCheckpoint(taskId);
+  assert.equal(block.kind, "change-checkpoint");
+  assert.match(block.text, /Preserve &lt;safe&gt; behavior/);
+  assert.match(block.text, /src\/main.ts/);
+  assert.doesNotMatch(block.text, /\.\.\/secret/);
+  assert.ok(new TextEncoder().encode(block.text).length <= 4_096);
+  assert.equal(flow.takeChangeCheckpoint(taskId), undefined);
+  flow.observeWorkspace(taskId, "c".repeat(64), ["src/other.ts"]);
+  assert.equal(flow.takeChangeCheckpoint(taskId), undefined);
+});
+
+test("integrated recovery requires a repeated identical observed failure and deduplicates it", () => {
+  const flow = new IntegratedPlythFlow();
+  const taskId = "task-a";
+  const revision = "a".repeat(64);
+  flow.beginTask(taskId, "Fix the regression", revision);
+  const first = {
+    taskId,
+    commandKey: "1".repeat(64),
+    commandClass: "test",
+    outcome: "fail",
+    fingerprint: "2".repeat(64),
+    revision,
+    evidenceLabels: ["✖ rejects unsafe path"],
+  };
+  assert.equal(flow.observeCommandResult(first), undefined);
+  assert.equal(
+    flow.observeCommandResult({ ...first, fingerprint: "3".repeat(64) }),
+    undefined,
+  );
+  const changed = { ...first, fingerprint: "3".repeat(64) };
+  const repeated = flow.observeCommandResult(changed);
+  assert.equal(repeated.kind, "recovery");
+  assert.match(repeated.text, /without a task-local source change/);
+  assert.match(repeated.text, /rejects unsafe path/);
+  assert.equal(flow.observeCommandResult(changed), undefined);
+  assert.equal(
+    flow.observeCommandResult({ ...first, outcome: "pass" }),
+    undefined,
+  );
+});
+
+test("integrated recovery notes changed-revision failures and stops at two per task", () => {
+  const flow = new IntegratedPlythFlow();
+  const taskId = "task-a";
+  flow.beginTask(taskId, "Fix retry behavior", "a".repeat(64));
+  const failure = {
+    taskId,
+    commandKey: "1".repeat(64),
+    commandClass: "test",
+    outcome: "fail",
+    fingerprint: "2".repeat(64),
+    revision: "a".repeat(64),
+    evidenceLabels: ["retry test fails"],
+  };
+  flow.observeCommandResult(failure);
+  const updated = { ...failure, revision: "b".repeat(64) };
+  const first = flow.observeCommandResult(updated);
+  assert.match(first.text, /after task-local source changes/);
+  assert.equal(flow.observeCommandResult(updated), undefined);
+  const otherCommand = {
+    ...updated,
+    commandKey: "3".repeat(64),
+    revision: "c".repeat(64),
+  };
+  flow.observeCommandResult({ ...otherCommand, revision: "b".repeat(64) });
+  const second = flow.observeCommandResult(otherCommand);
+  assert.equal(second.kind, "recovery");
+  assert.equal(
+    flow.observeCommandResult({
+      ...otherCommand,
+      commandKey: "4".repeat(64),
+      revision: "d".repeat(64),
+    }),
+    undefined,
+  );
+  flow.beginTask("task-b", "New task", "d".repeat(64));
+  assert.equal(flow.observeCommandResult(otherCommand), undefined);
 });

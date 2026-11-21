@@ -1,5 +1,11 @@
 # Rook adapter: setup, capabilities and privacy
 
+## Rook integrated inference-loop prototype
+
+The sibling Rook host has an experimental, default-off Pi extension controlled by `ROOK_PLYTH_INTEGRATED=integrated`; `prompt` selects a static-guidance-only comparison. In integrated mode, PLYTH's exported `IntegratedPlythFlow` is a deterministic in-memory reducer for one task at a time. It emits at most one source-change checkpoint and two evidence-backed repeated-failure signals, bounded to 4 KiB per message and 16 KiB per task. Rook supplies task identity, safe Git scope/revisions, and structured completed Bash outcomes; the reducer performs no filesystem, provider, or tool operations.
+
+This is delivery plumbing, not evidence of task-quality improvement. No provider-backed test or effectiveness claim is part of the offline implementation. See the Rook README for activation, behavior, and compatibility with legacy prediction modes.
+
 ## Change-simplicity review (experimental)
 
 Rook's existing `/review` runs a separate read-only review using the selected
