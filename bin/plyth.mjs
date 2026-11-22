@@ -30,7 +30,11 @@ export async function main(args = process.argv.slice(2), dependencies = {}) {
   const options = parseArguments(args);
   const project = await realpath(options.project);
   const workspacePackage = await readJson(join(project, "package.json"));
-  await assertCompatibleRookIfInstalled(workspacePackage, project);
+  await assertCompatibleRookIfInstalled(
+    workspacePackage,
+    project,
+    dependencies.getGlobalRookPackageRoot,
+  );
 
   if (options.command === "status") {
     const config = await readPlythConfig(project);
@@ -203,37 +207,83 @@ function isCompatiblePlyth(pkg) {
   return major === 0 && minor === 1;
 }
 
-async function assertCompatibleRookIfInstalled(workspacePackage, project) {
-  if (
-    workspacePackage.name === "rook" ||
-    (typeof workspacePackage.name === "string" &&
-      workspacePackage.name.endsWith("/rook"))
-  ) {
-    if (workspacePackage.rookCapabilities?.plythIntegration !== 1)
-      throw new Error(
-        `Rook at ${project} does not declare PLYTH integration capability 1.`,
-      );
+async function assertCompatibleRookIfInstalled(
+  workspacePackage,
+  project,
+  getGlobalRookPackageRoot = defaultGlobalRookPackageRoot,
+) {
+  if (isRookPackage(workspacePackage)) {
+    assertPlythCapability(workspacePackage, `Rook at ${project}`);
     return;
   }
+
   const nodeModules = join(project, "node_modules");
-  const candidates = [join(nodeModules, "rook", "package.json")];
+  const candidates = [
+    join(nodeModules, "rook-agent", "package.json"),
+    join(nodeModules, "rook", "package.json"),
+  ];
   try {
     const entries = await readdir(nodeModules, { withFileTypes: true });
     for (const entry of entries) {
       if (entry.isDirectory() && entry.name.startsWith("@"))
-        candidates.push(join(nodeModules, entry.name, "rook", "package.json"));
+        for (const packageName of ["rook-agent", "rook"])
+          candidates.push(
+            join(nodeModules, entry.name, packageName, "package.json"),
+          );
     }
   } catch (error) {
     if (!isMissing(error)) throw error;
   }
   for (const path of candidates) {
     const localRook = await readOptionalJson(path);
-    if (localRook?.name === "rook" || localRook?.name?.endsWith("/rook")) {
-      if (localRook.rookCapabilities?.plythIntegration !== 1)
-        throw new Error(
-          `Installed Rook ${localRook.version ?? "unknown"} does not declare PLYTH integration capability 1.`,
-        );
-    }
+    if (!isRookPackage(localRook)) continue;
+    assertPlythCapability(
+      localRook,
+      `Installed Rook ${localRook.version ?? "unknown"}`,
+    );
+    return;
+  }
+
+  const globalRoot = await getGlobalRookPackageRoot();
+  if (!globalRoot) return;
+  const globalRook = await readOptionalJson(
+    join(globalRoot, "rook-agent", "package.json"),
+  );
+  if (isRookPackage(globalRook)) {
+    assertPlythCapability(
+      globalRook,
+      `Globally installed Rook ${globalRook.version ?? "unknown"}`,
+    );
+  }
+}
+
+function isRookPackage(pkg) {
+  return (
+    pkg &&
+    typeof pkg.name === "string" &&
+    (pkg.name === "rook-agent" ||
+      pkg.name === "rook" ||
+      pkg.name.endsWith("/rook-agent") ||
+      pkg.name.endsWith("/rook"))
+  );
+}
+
+function assertPlythCapability(pkg, description) {
+  if (pkg.rookCapabilities?.plythIntegration !== 1)
+    throw new Error(
+      `${description} does not declare PLYTH integration capability 1.`,
+    );
+}
+
+async function defaultGlobalRookPackageRoot() {
+  try {
+    const root = execFileSync("npm", ["root", "-g"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    return root || undefined;
+  } catch {
+    return undefined;
   }
 }
 
@@ -276,9 +326,9 @@ async function readOptionalJson(path) {
 function printUsage() {
   process.stdout.write(
     "Usage:\n" +
-      "  plyth install rook [--project PATH] [--mode integrated|prompt|off] [--source PACKAGE_SPEC]\n" +
-      "  plyth status rook [--project PATH]\n" +
-      "  plyth uninstall rook [--project PATH]\n\n" +
+      "  plyth-core install rook [--project PATH] [--mode integrated|prompt|off] [--source PACKAGE_SPEC]\n" +
+      "  plyth-core status rook [--project PATH]\n" +
+      "  plyth-core uninstall rook [--project PATH]\n\n" +
       "Install defaults to off. Use --mode prompt for static guidance or --mode integrated for experimental dynamic feedback.\n" +
       "--source accepts an npm package spec or local tarball path for unpublished testing.\n",
   );

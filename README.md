@@ -18,15 +18,16 @@ reports linked below; they do not evaluate the new change-review prototype.
 
 ## Install PLYTH in Rook
 
-After PLYTH is available from npm, install it in any Node workspace you use
-with Rook:
+If Rook is installed globally, run the installer from the workspace where you
+want PLYTH enabled:
 
 ```sh
-npm install rook-agent
 npx plyth-core install rook --project .
 ```
 
-This adds PLYTH to the workspace and writes `.rook/plyth.json` with mode `off`.
+The installer recognizes a compatible global `rook-agent`, adds only PLYTH to
+the workspace, and writes `.rook/plyth.json` with mode `off`. A local Rook
+installation is also supported and takes precedence over the global package.
 Enable static guidance with `--mode prompt`, or explicitly opt into experimental
 dynamic mode with `--mode integrated`. Dynamic mode has no demonstrated coding
 benefit and remains off by default. Restart Rook to apply the setting.
@@ -46,12 +47,13 @@ path with its absolute path):
 
 ```sh
 npm pack --pack-destination /path/to/artifacts
-npm exec --yes --package=/path/to/artifacts/plyth-0.1.0.tgz -- plyth install rook --project /path/to/workspace --source /path/to/artifacts/plyth-0.1.0.tgz
+npm exec --yes --package=/path/to/artifacts/plyth-core-0.1.0.tgz -- plyth-core install rook --project /path/to/workspace --source /path/to/artifacts/plyth-core-0.1.0.tgz
 ```
 
 The installer does not patch Rook source or alter its permissions. It checks a
-local Rook install's declared `plythIntegration` capability when present. Other
-coding-agent adapters are future work.
+local Rook installation first, then a globally installed `rook-agent`, and
+requires the declared `plythIntegration` capability when either is present.
+Other coding-agent adapters are future work.
 
 ## Development
 

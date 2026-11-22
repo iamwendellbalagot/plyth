@@ -161,3 +161,67 @@ test("accepts a compatible rook-agent package", async () => {
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("uses globally installed rook-agent without adding it to the workspace", async () => {
+  const root = await projectDirectory();
+  const globalRoot = join(root, "global");
+  try {
+    const globalRook = join(globalRoot, "rook-agent");
+    await mkdir(globalRook, { recursive: true });
+    await writeFile(
+      join(globalRook, "package.json"),
+      JSON.stringify({
+        name: "rook-agent",
+        version: "0.1.0",
+        rookCapabilities: { plythIntegration: 1 },
+      }),
+    );
+    let attemptedInstall = false;
+    assert.equal(
+      await main(["install", "rook", "--project", root], {
+        getGlobalRookPackageRoot: async () => globalRoot,
+        installPackage: async (project) => {
+          attemptedInstall = true;
+          await installStub(project);
+        },
+      }),
+      0,
+    );
+    assert.equal(attemptedInstall, true);
+    assert.deepEqual(
+      JSON.parse(await readFile(join(root, "package.json"), "utf8")),
+      { name: "sample-project", version: "1.0.0" },
+    );
+    await assert.rejects(
+      readFile(join(root, "node_modules", "rook-agent", "package.json")),
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejects a globally installed Rook without PLYTH capability", async () => {
+  const root = await projectDirectory();
+  const globalRoot = join(root, "global");
+  try {
+    const globalRook = join(globalRoot, "rook-agent");
+    await mkdir(globalRook, { recursive: true });
+    await writeFile(
+      join(globalRook, "package.json"),
+      JSON.stringify({ name: "rook-agent", version: "0.1.0" }),
+    );
+    let attemptedInstall = false;
+    await assert.rejects(
+      main(["install", "rook", "--project", root], {
+        getGlobalRookPackageRoot: async () => globalRoot,
+        installPackage: async () => {
+          attemptedInstall = true;
+        },
+      }),
+      /Globally installed Rook 0.1.0 does not declare PLYTH integration capability 1/,
+    );
+    assert.equal(attemptedInstall, false);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
