@@ -51,7 +51,7 @@ path with its absolute path):
 
 ```sh
 npm pack --pack-destination /path/to/artifacts
-npm exec --yes --package=/path/to/artifacts/plyth-core-0.1.1.tgz -- plyth-core install rook --project /path/to/workspace --source /path/to/artifacts/plyth-core-0.1.1.tgz
+npm exec --yes --package=/path/to/artifacts/plyth-core-0.1.2.tgz -- plyth-core install rook --project /path/to/workspace --source /path/to/artifacts/plyth-core-0.1.2.tgz
 ```
 
 The installer does not patch Rook source or alter its permissions. It checks a
