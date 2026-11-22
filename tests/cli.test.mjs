@@ -15,11 +15,11 @@ async function projectDirectory() {
 }
 
 async function installStub(project) {
-  const packageDirectory = join(project, "node_modules", "plyth");
+  const packageDirectory = join(project, "node_modules", "plyth-core");
   await mkdir(packageDirectory, { recursive: true });
   await writeFile(
     join(packageDirectory, "package.json"),
-    JSON.stringify({ name: "plyth", version: "0.1.0" }),
+    JSON.stringify({ name: "plyth-core", version: "0.1.0" }),
   );
 }
 
@@ -89,7 +89,7 @@ test("installs in a workspace, reports status, and removes the dependency on uni
       await main(["uninstall", "rook", "--project", root], {
         uninstallPackage: async (project) => {
           uninstallCalls++;
-          await rm(join(project, "node_modules", "plyth"), {
+          await rm(join(project, "node_modules", "plyth-core"), {
             recursive: true,
             force: true,
           });
@@ -103,7 +103,7 @@ test("installs in a workspace, reports status, and removes the dependency on uni
       { schemaVersion: 1, integrationVersion: 1, mode: "off" },
     );
     await assert.rejects(
-      readFile(join(root, "node_modules", "plyth", "package.json")),
+      readFile(join(root, "node_modules", "plyth-core", "package.json")),
     );
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -133,15 +133,15 @@ test("rejects a local Rook install without the declared PLYTH capability", async
   }
 });
 
-test("accepts a compatible account-scoped Rook package", async () => {
+test("accepts a compatible rook-agent package", async () => {
   const root = await projectDirectory();
   try {
-    const scopedRook = join(root, "node_modules", "@wendell2215", "rook");
-    await mkdir(scopedRook, { recursive: true });
+    const rookPackage = join(root, "node_modules", "rook-agent");
+    await mkdir(rookPackage, { recursive: true });
     await writeFile(
-      join(scopedRook, "package.json"),
+      join(rookPackage, "package.json"),
       JSON.stringify({
-        name: "@wendell2215/rook",
+        name: "rook-agent",
         version: "0.1.0",
         rookCapabilities: { plythIntegration: 1 },
       }),

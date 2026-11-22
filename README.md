@@ -22,8 +22,8 @@ After PLYTH is available from npm, install it in any Node workspace you use
 with Rook:
 
 ```sh
-npm install @wendell2215/rook
-npx plyth install rook --project .
+npm install rook-agent
+npx plyth-core install rook --project .
 ```
 
 This adds PLYTH to the workspace and writes `.rook/plyth.json` with mode `off`.
@@ -33,8 +33,8 @@ benefit and remains off by default. Restart Rook to apply the setting.
 Inspect or disable the integration with:
 
 ```sh
-npx plyth status rook --project .
-npx plyth uninstall rook --project .
+npx plyth-core status rook --project .
+npx plyth-core uninstall rook --project .
 ```
 
 Uninstall disables the integration and removes PLYTH from the workspace; Rook
@@ -96,7 +96,7 @@ import {
   CommandHistoryBaseline,
   binaryInterval,
   pairedBootstrapDifference,
-} from "plyth";
+} from "plyth-core";
 
 const history = new CommandHistoryBaseline();
 const forecast = history.begin("normalized-command", "host-workspace-revision");

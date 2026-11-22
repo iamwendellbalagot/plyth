@@ -1,5 +1,5 @@
 {
-  "name": "plyth",
+  "name": "plyth-core",
   "version": "0.1.0",
   "description": "Local-first outcome tracking and experimental feedback for coding agents.",
   "license": "MIT",
@@ -19,7 +19,7 @@
   ],
   "type": "module",
   "bin": {
-    "plyth": "bin/plyth.mjs"
+    "plyth-core": "bin/plyth.mjs"
   },
   "files": [
     "dist",

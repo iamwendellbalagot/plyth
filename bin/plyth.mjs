@@ -15,6 +15,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const PLYTH_PACKAGE_NAME = "plyth-core";
 const packageInfo = JSON.parse(
   await readFile(join(packageRoot, "package.json"), "utf8"),
 );
@@ -49,7 +50,7 @@ export async function main(args = process.argv.slice(2), dependencies = {}) {
     if (dependencies.uninstallPackage) {
       await dependencies.uninstallPackage(project);
     } else {
-      execFileSync("npm", ["uninstall", "--save", "plyth"], {
+      execFileSync("npm", ["uninstall", "--save", PLYTH_PACKAGE_NAME], {
         cwd: project,
         stdio: "inherit",
       });
@@ -66,7 +67,8 @@ export async function main(args = process.argv.slice(2), dependencies = {}) {
 
   const installed = await installedPlyth(project);
   if (options.source || !isCompatiblePlyth(installed)) {
-    const source = options.source ?? `plyth@${packageInfo.version}`;
+    const source =
+      options.source ?? `${PLYTH_PACKAGE_NAME}@${packageInfo.version}`;
     if (dependencies.installPackage) {
       await dependencies.installPackage(project, source);
     } else {
@@ -86,7 +88,7 @@ export async function main(args = process.argv.slice(2), dependencies = {}) {
   process.stdout.write(
     `PLYTH ${mode} mode configured for Rook in ${project}.\n` +
       (mode === "integrated"
-        ? "Integrated feedback is experimental and has no demonstrated benefit; disable it with `npx plyth uninstall rook --project .` or set ROOK_PLYTH_INTEGRATED=off.\n"
+        ? "Integrated feedback is experimental and has no demonstrated benefit; disable it with `npx plyth-core uninstall rook --project .` or set ROOK_PLYTH_INTEGRATED=off.\n"
         : "Dynamic feedback remains off unless you opt in with `--mode prompt` or `--mode integrated`. Restart Rook to apply changes.\n"),
   );
   return 0;
@@ -175,7 +177,12 @@ async function installedPlyth(project) {
   try {
     return JSON.parse(
       await readFile(
-        join(project, "node_modules", "plyth", "package.json"),
+        join(
+          project,
+          "node_modules",
+          ...PLYTH_PACKAGE_NAME.split("/"),
+          "package.json",
+        ),
         "utf8",
       ),
     );
@@ -186,7 +193,11 @@ async function installedPlyth(project) {
 }
 
 function isCompatiblePlyth(pkg) {
-  if (!pkg || pkg.name !== "plyth" || typeof pkg.version !== "string")
+  if (
+    !pkg ||
+    pkg.name !== PLYTH_PACKAGE_NAME ||
+    typeof pkg.version !== "string"
+  )
     return false;
   const [major, minor] = pkg.version.split(".").map(Number);
   return major === 0 && minor === 1;
