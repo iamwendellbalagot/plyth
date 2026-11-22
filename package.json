@@ -1,6 +1,6 @@
 {
   "name": "plyth-core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Local-first outcome tracking and experimental feedback for coding agents.",
   "license": "MIT",
   "author": "Wendell Balagot",
