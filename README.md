@@ -18,29 +18,33 @@ reports linked below; they do not evaluate the new change-review prototype.
 
 ## Install PLYTH in Rook
 
-If Rook is installed globally, run the installer from the workspace where you
-want PLYTH enabled:
+Install both tools globally once:
 
 ```sh
-npx plyth-core install rook --project .
+npm install --global rook-agent plyth-core
 ```
 
-The installer recognizes a compatible global `rook-agent`, adds only PLYTH to
-the workspace, and writes `.rook/plyth.json` with mode `off`. A local Rook
-installation is also supported and takes precedence over the global package.
-Enable static guidance with `--mode prompt`, or explicitly opt into experimental
-dynamic mode with `--mode integrated`. Dynamic mode has no demonstrated coding
-benefit and remains off by default. Restart Rook to apply the setting.
+Then configure PLYTH for any Rook workspace, including non-Node projects:
+
+```sh
+cd /path/to/project
+plyth-core install rook --project .
+```
+
+This writes `.rook/plyth.json` with integrated mode by default; it does not add
+`package.json`, a lockfile, or `node_modules` to the project. Restart Rook to
+apply the setting. Prompt-only mode remains available with `--mode prompt`.
 Inspect or disable the integration with:
 
 ```sh
-npx plyth-core status rook --project .
-npx plyth-core uninstall rook --project .
+plyth-core status rook --project .
+plyth-core uninstall rook --project .
 ```
 
-Uninstall disables the integration and removes PLYTH from the workspace; Rook
-continues to work without it. An explicit `ROOK_PLYTH_INTEGRATED` environment
-setting overrides the project's `.rook/plyth.json` mode.
+Uninstall disables PLYTH for that workspace but leaves the globally installed
+package in place. Rook continues to work without it. An explicit
+`ROOK_PLYTH_INTEGRATED` environment setting overrides the project's
+`.rook/plyth.json` mode.
 
 For local testing, pack PLYTH and use the tarball as the CLI source (replace the
 path with its absolute path):
@@ -53,7 +57,8 @@ npm exec --yes --package=/path/to/artifacts/plyth-core-0.1.1.tgz -- plyth-core i
 The installer does not patch Rook source or alter its permissions. It checks a
 local Rook installation first, then a globally installed `rook-agent`, and
 requires the declared `plythIntegration` capability when either is present.
-Other coding-agent adapters are future work.
+It does not require a workspace `package.json`. Other coding-agent adapters are
+future work.
 
 ## Development
 

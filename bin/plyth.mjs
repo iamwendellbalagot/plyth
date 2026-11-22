@@ -29,21 +29,28 @@ export async function main(args = process.argv.slice(2), dependencies = {}) {
 
   const options = parseArguments(args);
   const project = await realpath(options.project);
-  const workspacePackage = await readJson(join(project, "package.json"));
+  const workspacePackage = await readOptionalJson(
+    join(project, "package.json"),
+  );
+  const getGlobalNodeModulesRoot =
+    dependencies.getGlobalNodeModulesRoot ?? defaultGlobalNodeModulesRoot;
+  const globalNodeModulesRoot = await getGlobalNodeModulesRoot();
   await assertCompatibleRookIfInstalled(
     workspacePackage,
     project,
-    dependencies.getGlobalRookPackageRoot,
+    async () => globalNodeModulesRoot,
   );
 
   if (options.command === "status") {
     const config = await readPlythConfig(project);
-    const installed = await installedPlyth(project);
-    const effectiveMode = resolveEffectiveMode(config?.mode, process.env);
+    const installed = await installedPlyth(project, globalNodeModulesRoot);
+    const effectiveMode = installed
+      ? resolveEffectiveMode(config?.mode, process.env)
+      : "off";
     process.stdout.write(
       `PLYTH for Rook (${project})\n` +
-        `  package: ${installed?.version ?? "not installed"}\n` +
-        `  project mode: ${config?.mode ?? "off (not configured)"}\n` +
+        `  package: ${installed?.manifest.version ?? "not installed"}${installed ? ` (${installed.source})` : ""}\n` +
+        `  project mode: ${config?.mode ?? "integrated (default)"}\n` +
         `  effective mode: ${effectiveMode}\n`,
     );
     return installed ? 0 : 1;
@@ -51,49 +58,50 @@ export async function main(args = process.argv.slice(2), dependencies = {}) {
 
   if (options.command === "uninstall") {
     await writePlythConfig(project, "off");
-    if (dependencies.uninstallPackage) {
-      await dependencies.uninstallPackage(project);
-    } else {
-      execFileSync("npm", ["uninstall", "--save", PLYTH_PACKAGE_NAME], {
-        cwd: project,
-        stdio: "inherit",
-      });
-    }
     process.stdout.write(
-      "PLYTH integration disabled and the workspace dependency removed. Restart Rook if it is running.\n",
+      "PLYTH disabled for this workspace. The installed package remains available; restart Rook to apply changes.\n",
     );
     return 0;
   }
 
   const oldConfig = await readPlythConfig(project);
-  const mode = options.mode ?? oldConfig?.mode ?? "off";
+  const mode = options.mode ?? oldConfig?.mode ?? "integrated";
   if (!isMode(mode)) throw new Error(`Unsupported PLYTH mode: ${mode}`);
 
-  const installed = await installedPlyth(project);
-  if (options.source || !isCompatiblePlyth(installed)) {
-    const source =
-      options.source ?? `${PLYTH_PACKAGE_NAME}@${packageInfo.version}`;
+  let installed = await installedPlyth(project, globalNodeModulesRoot);
+  if (options.source) {
+    const source = options.source;
     if (dependencies.installPackage) {
       await dependencies.installPackage(project, source);
     } else {
-      execFileSync("npm", ["install", "--save-exact", source], {
-        cwd: project,
-        stdio: "inherit",
-      });
-    }
-    const installedAfter = await installedPlyth(project);
-    if (!isCompatiblePlyth(installedAfter))
-      throw new Error(
-        `PLYTH installation did not produce a compatible package in ${project}.`,
+      execFileSync(
+        "npm",
+        [
+          "install",
+          "--no-save",
+          "--no-package-lock",
+          "--prefix",
+          project,
+          source,
+        ],
+        {
+          cwd: project,
+          stdio: "inherit",
+        },
       );
+    }
+    installed = await installedPlyth(project, globalNodeModulesRoot);
+  }
+  if (!isCompatiblePlyth(installed?.manifest)) {
+    throw new Error(
+      `PLYTH is not installed globally. Run \`npm install --global ${PLYTH_PACKAGE_NAME}@${packageInfo.version}\` first.`,
+    );
   }
 
   await writePlythConfig(project, mode);
   process.stdout.write(
     `PLYTH ${mode} mode configured for Rook in ${project}.\n` +
-      (mode === "integrated"
-        ? "Integrated feedback is experimental and has no demonstrated benefit; disable it with `npx plyth-core uninstall rook --project .` or set ROOK_PLYTH_INTEGRATED=off.\n"
-        : "Dynamic feedback remains off unless you opt in with `--mode prompt` or `--mode integrated`. Restart Rook to apply changes.\n"),
+      `Rook loads the ${installed.source} PLYTH package. Restart Rook to apply changes.\n`,
   );
   return 0;
 }
@@ -177,23 +185,21 @@ async function writePlythConfig(project, mode) {
   }
 }
 
-async function installedPlyth(project) {
-  try {
-    return JSON.parse(
-      await readFile(
-        join(
-          project,
-          "node_modules",
-          ...PLYTH_PACKAGE_NAME.split("/"),
-          "package.json",
-        ),
-        "utf8",
-      ),
-    );
-  } catch (error) {
-    if (isMissing(error)) return undefined;
-    throw error;
-  }
+async function installedPlyth(project, globalNodeModulesRoot) {
+  const local = await readOptionalJson(
+    join(
+      project,
+      "node_modules",
+      ...PLYTH_PACKAGE_NAME.split("/"),
+      "package.json",
+    ),
+  );
+  if (local) return { manifest: local, source: "workspace" };
+  if (!globalNodeModulesRoot) return undefined;
+  const global = await readOptionalJson(
+    join(globalNodeModulesRoot, PLYTH_PACKAGE_NAME, "package.json"),
+  );
+  return global ? { manifest: global, source: "global" } : undefined;
 }
 
 function isCompatiblePlyth(pkg) {
@@ -210,7 +216,7 @@ function isCompatiblePlyth(pkg) {
 async function assertCompatibleRookIfInstalled(
   workspacePackage,
   project,
-  getGlobalRookPackageRoot = defaultGlobalRookPackageRoot,
+  getGlobalNodeModulesRoot = defaultGlobalNodeModulesRoot,
 ) {
   if (isRookPackage(workspacePackage)) {
     assertPlythCapability(workspacePackage, `Rook at ${project}`);
@@ -244,7 +250,7 @@ async function assertCompatibleRookIfInstalled(
     return;
   }
 
-  const globalRoot = await getGlobalRookPackageRoot();
+  const globalRoot = await getGlobalNodeModulesRoot();
   if (!globalRoot) return;
   const globalRook = await readOptionalJson(
     join(globalRoot, "rook-agent", "package.json"),
@@ -275,7 +281,7 @@ function assertPlythCapability(pkg, description) {
     );
 }
 
-async function defaultGlobalRookPackageRoot() {
+async function defaultGlobalNodeModulesRoot() {
   try {
     const root = execFileSync("npm", ["root", "-g"], {
       encoding: "utf8",
@@ -294,7 +300,7 @@ function resolveEffectiveMode(configMode, env) {
     if (value === "prompt") return "prompt";
     return "off";
   }
-  return configMode ?? "off";
+  return configMode ?? "integrated";
 }
 
 function isMode(value) {
@@ -329,7 +335,7 @@ function printUsage() {
       "  plyth-core install rook [--project PATH] [--mode integrated|prompt|off] [--source PACKAGE_SPEC]\n" +
       "  plyth-core status rook [--project PATH]\n" +
       "  plyth-core uninstall rook [--project PATH]\n\n" +
-      "Install defaults to off. Use --mode prompt for static guidance or --mode integrated for experimental dynamic feedback.\n" +
+      "Install defaults to integrated. Use --mode prompt for static guidance or --mode off to disable PLYTH for this workspace.\n" +
       "--source accepts an npm package spec or local tarball path for unpublished testing.\n",
   );
 }

@@ -2,6 +2,7 @@
 
 ## Current state
 
+- **Global PLYTH / non-Node workspace support is implemented locally, not yet released.** The CLI resolves workspace PLYTH first and then global npm PLYTH, allows configuration without `package.json`, defaults to integrated mode, and workspace uninstall only disables configuration. PLYTH validation passes (26 tests, build, no-unused checks). Rook resolves workspace-first/global-second and exposes `/plyth status|enable|disable` while retaining `/plyth trace ...`; focused validation passes (98 tests, typecheck, build). Both repositories still need commits. Published versions remain `plyth-core@0.1.1` and `rook-agent@0.1.0`.
 - **`plyth-core@0.1.1` is live on npm.** Adds global Rook detection while preferring local installs and validating capability. Registry `latest` and integrity match the packed artifact (`55fd42c954857bcf8a98a8dd6f32b1a6ca1f2a18`, `sha512-Ei1yCQBfEFW2/y9JyjswLJ/PsvjIcqCQVToWBLTm7Vt+b26cAZmvdkl0K4ZPCi5vwR5PgGUKIt+qF0oiPAihIw==`). PLYTH passes 26/26 tests, build, no-unused checks, and formatting. A clean install of published `plyth-core@0.1.1` with globally installed `rook-agent@0.1.0` configured PLYTH without adding Rook locally; global Rook smoke passed.
 - **Rook modularization and workspace installer prepared.** PLYTH is an optional peer resolved from the active workspace; Rook starts without it. Packed Rook was installed/smoke-tested alone, then packed PLYTH configured integrated mode and uninstalled cleanly. Rook full test suite now passes (323 passed, one Linux-only Bubblewrap test skipped on macOS); typecheck/build/no-unused checks pass. Only confirmed dead code was removed. Npm `rook` belongs to another maintainer, so no Rook publish attempt was made.
 - **Targeted recovery comparison complete; revised signal unproven.** All nine off/prompt/integrated cells passed; all agents tested before editing and passed on their first post-edit verification, so there were zero persistent-failure opportunities and no recovery messages. No efficacy inference is possible for the revised signal. Combined with the prior checkpoint comparison, no dynamic PLYTH coding benefit is demonstrated. Keep default-off and stop expansion unless a naturally recurring failed-check workflow is available. Full report/raw data: sibling Rook `evals/plyth-recovery-comparison/REPORT.md` and `runs.jsonl`.
@@ -27,4 +28,5 @@
 
 ## Next
 
+- Commit the completed PLYTH and Rook changes after reviewing diffs; publish new versions only if explicitly continuing release work.
 - Any off/prompt/integrated comparison requires a separate frozen protocol with untouched tasks and independent checks. Preserve the stopped pilot artifacts and all existing user-owned untracked Rook files.
